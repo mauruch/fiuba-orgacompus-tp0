@@ -40,9 +40,7 @@
 //# Close file
 //fout.close()
 
-#include <iostream>
 #include <stdio.h>
-using namespace std;
 
 #define DEFAULT_WIDTH = 640;
 #define DEFAULT_HEIGHT = 480;
