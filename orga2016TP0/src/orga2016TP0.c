@@ -51,17 +51,76 @@
 #define DEFAULT_WIDTH = 640;
 #define DEFAULT_HEIGHT = 480;
 
-char* findDelimSymbol(char* cvalue){
+char getDelimSymbol(char* cvalue){
 	int len = strlen(cvalue);
-	char* delim = NULL;
-	while(len >= 0){
-		char value = cvalue[len];
-		if( !isdigit(value) ){
-			delim = &cvalue[len];
+	char delim;
+	while(len > 0){
+		char value = cvalue[len-1];
+		if( !isdigit(value) && value != '.' ){
+			delim = value;
+			break;
 		}
 		len=len-1;
 	}
 	return delim;
+}
+
+float getReValue(char* string,char delim){
+	//10 will be the maximum number of digits
+	char token[10] = "";
+	int len = 0;
+	while( len < strlen(string) ){
+		char value = string[len];
+		if( len > 0 && value == delim){
+			break;
+		}else{
+			*(&token[len]) = value;
+		}
+		len++;
+	}
+	return atof(token);
+}
+
+float getImValue(char* string,char delim){
+	//10 will be the maximum number of digits
+	int len = strlen(string);
+	char token[10] = "";
+	while( len > 0){
+		char value = string[len-1];
+		if( value == delim){
+			break;
+		}else{
+			token[len-1] = value;
+		}
+		len--;
+	}
+	return atof(&token[len]);
+}
+
+bool isComplexValue(char* string){
+	int len = strlen(string);
+	const char * last = &string[len-1];
+	if(strcmp(last, "i") != 0){
+		return false;
+	}
+	return true;
+}
+
+int analyzerComplexParameter(bool cFlag, char* cValue,float* cRe,float* cIm){
+	if (cFlag){
+		if(strcmp(cValue, "") == 0){
+			return -1;
+		}
+		if(!isComplexValue(cValue)){
+			return -1;
+		}
+		//extract trailing i
+		strtok(cValue, "i");
+		char delim = getDelimSymbol(cValue);
+		*cRe = getReValue(cValue,delim);
+		*cIm = getImValue(cValue,delim);
+	}
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -71,13 +130,15 @@ int main(int argc, char *argv[]) {
 	}
 	//variables
 	int c;
-	float width;
-	float height;
-	float cRe;
-	float cIm;
+	float width = 640;
+	float height = 480;
+	float cRe = 0;
+	float cIm = 0;
+	float CRe = 0.285;
+	float CIm = -0.01;
 	FILE * pgmFile;
-	float w;
-	float h;
+	float w = 4;
+	float h = 4;
 
 	//args flags
 	bool rflag = false;
@@ -131,40 +192,20 @@ int main(int argc, char *argv[]) {
 		width = atof(token);
 		token  = strtok(0, delim);
 		height = atof(token);
-	}else{
-		//default values
-		width = 640;
-		height = 480;
 	}
+
 	//image center value
-	if (cflag){
-		if(strcmp(cvalue, "") == 0){
-			//cvalue is empty
-			printf ("Fatal: invalid center specification.\n");
-			return -1;
-		}
-
-		//check if cvalue is complex
-		int len = strlen(cvalue);
-		const char * last = &cvalue[len-1];
-		if(strcmp(last, "i") != 0){
-			printf ("Fatal: invalid center specification.\n");
-			return -1;
-		}
-		//extract trailing i
-		strtok(cvalue, "i");
-		// need to split cvalue in + and i
-		char* delim = findDelimSymbol(cvalue);
-		char* token = strtok(cvalue, delim);
-		cRe = atof(token);
-		token = strtok(0, delim);
-		cIm = atof(token);
-
-	} else {
-		//default values
-		cRe = 0;
-		cIm = 0;
+	if(analyzerComplexParameter(cflag,cvalue,&cRe,&cIm)!=0){
+		printf ("Fatal: invalid specification.\n");
+		return -1;
 	}
+
+	//C parameter value
+	if(analyzerComplexParameter(Cflag,Cvalue,&CRe,&CIm)!=0){
+		printf ("Fatal: invalid specification.\n");
+		return -1;
+	}
+
 	//file name value
 	if (oflag) {
 		if(strcmp(ovalue, "-") == 0){
@@ -176,19 +217,21 @@ int main(int argc, char *argv[]) {
 				return -1;
 			}
 		}
+	}else{
+		printf("Fatal: -o parameter is mandatory.");
+		return -1;
 	}
+
 	//width value
 	if(wflag){
 		w = atof(wvalue);
-	}else{
-		w = 4;
 	}
 	//high value
 	if(Hflag){
 		h = atof(Hvalue);
-	}else{
-		h = 4;
 	}
+
+
 
 	float a, b; // a + bi
 	// Start at negative half the width and height
