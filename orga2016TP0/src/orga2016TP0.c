@@ -51,6 +51,19 @@
 #define DEFAULT_WIDTH = 640;
 #define DEFAULT_HEIGHT = 480;
 
+char* findDelimSymbol(char* cvalue){
+	int len = strlen(cvalue);
+	char* delim = NULL;
+	while(len >= 0){
+		char value = cvalue[len];
+		if( !isdigit(value) ){
+			delim = &cvalue[len];
+		}
+		len=len-1;
+	}
+	return delim;
+}
+
 int main(int argc, char *argv[]) {
 	if(argc == 1){
 		printf("No options given\n");
@@ -141,7 +154,7 @@ int main(int argc, char *argv[]) {
 		//extract trailing i
 		strtok(cvalue, "i");
 		// need to split cvalue in + and i
-		char* delim = "+";
+		char* delim = findDelimSymbol(cvalue);
 		char* token = strtok(cvalue, delim);
 		cRe = atof(token);
 		token = strtok(0, delim);
@@ -176,10 +189,6 @@ int main(int argc, char *argv[]) {
 	}else{
 		h = 4;
 	}
-
-
-
-
 
 	float a, b; // a + bi
 	// Start at negative half the width and height
