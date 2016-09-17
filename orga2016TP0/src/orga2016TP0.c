@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
 		printf("No options given\n");
 		//return;
 	}
-	//variables
+	//global variables
 	int c;
 	float width = 640;
 	float height = 480;
@@ -147,46 +147,36 @@ int main(int argc, char *argv[]) {
 	float h = 4;
 
 	//args values
-	char *rvalue = NULL;
-	char *cvalue = NULL;
-	char *Cvalue = NULL;
-	char *wvalue = NULL;
-	char *Hvalue = NULL;
 	char *ovalue = NULL;
 
 	//read args params
 	while ((c = getopt(argc, argv, "r:c:C:w:H:o:")) != -1) {
 		switch (c){
 			case 'r':
-				rvalue = optarg;
 				//resolution value
-				setResolution(rvalue,&width,&height);
+				setResolution(optarg,&width,&height);
 				break;
 			case 'c':
-				cvalue = optarg;
 				//image center value
-				if(analyzerComplexParameter(cvalue,&cRe,&cIm)!=0){
+				if(analyzerComplexParameter(optarg,&cRe,&cIm)!=0){
 					printf ("Fatal: invalid specification.\n");
 					return -1;
 				}
 				break;
 			case 'C':
-				Cvalue = optarg;
 				//C parameter value
-				if(analyzerComplexParameter(Cvalue,&CRe,&CIm)!=0){
+				if(analyzerComplexParameter(optarg,&CRe,&CIm)!=0){
 					printf ("Fatal: invalid specification.\n");
 					return -1;
 				}
 				break;
 			case 'w':
-				wvalue = optarg;
 				//width value
-				w = atof(wvalue);
+				w = atof(optarg);
 				break;
 			case 'H':
-				Hvalue = optarg;
 				//high value
-				h = atof(Hvalue);
+				h = atof(optarg);
 				break;
 			case 'o':
 				ovalue = optarg;
