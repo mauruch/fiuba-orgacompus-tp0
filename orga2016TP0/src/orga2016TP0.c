@@ -24,7 +24,7 @@ bool isComplexValue(char* string);
 int analyzerComplexParameter(char* cValue, float* cRe, float* cIm);
 void setResolution(char* rvalue, float* width, float* height);
 void drawJuliaSet(FILE* pgmFile, float resW, float resH, float recW, float recH,
-		float compRe, float compIm);
+		float compRe, float compIm, float centerRe, float centerIm);
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
@@ -96,20 +96,21 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	drawJuliaSet(pgmFile, resW, resH, recW, recH, complexRe, complexIm);
-
-	printf("Termino bien");
+	drawJuliaSet(pgmFile, resW, resH, recW, recH, complexRe, complexIm,
+			centerRe, centerIm);
 
 	return 0;
 }
 
 void drawJuliaSet(FILE* pgmFile, float resW, float resH, float recW, float recH,
-		float compRe, float compIm) {
-	float a, b; // a + bi
+		float compRe, float compIm, float centerRe, float centerIm) {
+
+	// a + bi
+	float a, b;
 
 	// Start at negative half the rectangleDrawWidth and resolutionHeight
-	float xmin = -recW / 2;
-	float ymin = -recH / 2;
+	float xmin = -recW / 2 + centerRe;
+	float ymin = -recH / 2 + centerIm;
 
 	// x goes from xmin to xmax
 	float xmax = xmin + recW;
