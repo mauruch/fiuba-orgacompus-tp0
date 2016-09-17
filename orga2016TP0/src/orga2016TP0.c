@@ -121,6 +121,14 @@ int analyzerComplexParameter(char* cValue,float* cRe,float* cIm){
 	return 0;
 }
 
+void setResolution(char* rvalue,float* width,float* height){
+	char *delim = "x";
+	char *token = strtok(rvalue, delim);
+	*width = atof(token);
+	token  = strtok(0, delim);
+	*height = atof(token);
+}
+
 int main(int argc, char *argv[]) {
 	if(argc == 1){
 		printf("No options given\n");
@@ -146,16 +154,13 @@ int main(int argc, char *argv[]) {
 	char *Hvalue = NULL;
 	char *ovalue = NULL;
 
+	//read args params
 	while ((c = getopt(argc, argv, "r:c:C:w:H:o:")) != -1) {
 		switch (c){
 			case 'r':
 				rvalue = optarg;
 				//resolution value
-				char *delim = "x";
-				char *token = strtok(rvalue, delim);
-				width = atof(token);
-				token  = strtok(0, delim);
-				height = atof(token);
+				setResolution(rvalue,&width,&height);
 				break;
 			case 'c':
 				cvalue = optarg;
