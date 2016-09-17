@@ -1,5 +1,10 @@
 /Debug/
+*.settings
 .cproject
 .project
 *.DS_Store
 *.pgm
+*.log
+*.gz
+*.aux
+*.png

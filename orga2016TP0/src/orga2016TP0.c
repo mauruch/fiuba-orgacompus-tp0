@@ -14,15 +14,12 @@
 #include <unistd.h>
 #include <string.h>
 
-#define DEFAULT_WIDTH = 640;
-#define DEFAULT_HEIGHT = 480;
-
 char getDelimSymbol(char* cvalue);
 float getReValue(char* string, char delim);
 float getImValue(char* string, char delim);
 bool isComplexValue(char* string);
 int analyzerComplexParameter(char* cValue, float* cRe, float* cIm);
-void setResolution(char* rvalue, float* width, float* height);
+int setResolution(char* rvalue, float* width, float* height);
 void drawJuliaSet(FILE* pgmFile, float resW, float resH, float recW, float recH,
 		float compRe, float compIm, float centerRe, float centerIm);
 
@@ -51,28 +48,39 @@ int main(int argc, char *argv[]) {
 		switch (c) {
 		case 'r':
 			//resolution value
-			setResolution(optarg, &resW, &resH);
+			if(setResolution(optarg, &resW, &resH) != 0){
+				printf("Fatal: invalid r specification.\n");
+				return -1;
+			}
 			break;
 		case 'c':
 			//image center value
 			if (analyzerComplexParameter(optarg, &centerRe, &centerIm) != 0) {
-				printf("Fatal: invalid specification.\n");
+				printf("Fatal: invalid c specification.\n");
 				return -1;
 			}
 			break;
 		case 'C':
 			//C parameter value
 			if (analyzerComplexParameter(optarg, &complexRe, &complexIm) != 0) {
-				printf("Fatal: invalid specification.\n");
+				printf("Fatal: invalid C specification.\n");
 				return -1;
 			}
 			break;
 		case 'w':
 			//width value
+			if(!isdigit(*optarg)){
+				printf("Fatal: invalid w specification.\n");
+				return -1;
+			}
 			recW = atof(optarg);
 			break;
 		case 'H':
 			//high value
+			if(!isdigit(*optarg)){
+				printf("Fatal: invalid H specification.\n");
+				return -1;
+			}
 			recH = atof(optarg);
 			break;
 		case 'o':
@@ -165,7 +173,7 @@ char getDelimSymbol(char* cvalue) {
 	char delim;
 	while (len > 0) {
 		char value = cvalue[len - 1];
-		if (!isdigit(value) && value != '.') {
+		if (!isdigit(value) && value != '.' && !isalpha(value)) {
 			delim = value;
 			break;
 		}
@@ -182,8 +190,10 @@ float getReValue(char* string, char delim) {
 		char value = string[len];
 		if (len > 0 && value == delim) {
 			break;
-		} else {
+		}else if(isdigit(value) || value == '.'){
 			*(&token[len]) = value;
+		}else{
+			return -1;
 		}
 		len++;
 	}
@@ -198,8 +208,10 @@ float getImValue(char* string, char delim) {
 		char value = string[len - 1];
 		if (value == delim) {
 			break;
-		} else {
+		}else if(isdigit(value) || value == '.'){
 			token[len - 1] = value;
+		}else{
+			return -1;
 		}
 		len--;
 	}
@@ -227,13 +239,20 @@ int analyzerComplexParameter(char* cValue, float* cRe, float* cIm) {
 	char delim = getDelimSymbol(cValue);
 	*cRe = getReValue(cValue, delim);
 	*cIm = getImValue(cValue, delim);
+	if(*cRe == -1 || *cIm == -1){
+		return -1;
+	}
 	return 0;
 }
 
-void setResolution(char* rvalue, float* width, float* height) {
+int setResolution(char* rvalue, float* width, float* height) {
 	char *delim = "x";
 	char *token = strtok(rvalue, delim);
 	*width = atof(token);
 	token = strtok(0, delim);
+	if(!token){
+		return -1;
+	}
 	*height = atof(token);
+	return 0;
 }
