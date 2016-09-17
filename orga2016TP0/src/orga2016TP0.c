@@ -184,6 +184,7 @@ int main(int argc, char *argv[]) {
 				h = atof(Hvalue);
 				break;
 			case 'o':
+				ovalue = optarg;
 				//file name value
 				if(strcmp(ovalue, "-") == 0){
 					pgmFile = stdout;
@@ -194,7 +195,6 @@ int main(int argc, char *argv[]) {
 						return -1;
 					}
 				}
-				ovalue = optarg;
 				break;
 		}
 	}
