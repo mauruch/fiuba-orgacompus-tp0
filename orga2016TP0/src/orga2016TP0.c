@@ -106,20 +106,18 @@ bool isComplexValue(char* string){
 	return true;
 }
 
-int analyzerComplexParameter(bool cFlag, char* cValue,float* cRe,float* cIm){
-	if (cFlag){
-		if(strcmp(cValue, "") == 0){
-			return -1;
-		}
-		if(!isComplexValue(cValue)){
-			return -1;
-		}
-		//extract trailing i
-		strtok(cValue, "i");
-		char delim = getDelimSymbol(cValue);
-		*cRe = getReValue(cValue,delim);
-		*cIm = getImValue(cValue,delim);
+int analyzerComplexParameter(char* cValue,float* cRe,float* cIm){
+	if(strcmp(cValue, "") == 0){
+		return -1;
 	}
+	if(!isComplexValue(cValue)){
+		return -1;
+	}
+	//extract trailing i
+	strtok(cValue, "i");
+	char delim = getDelimSymbol(cValue);
+	*cRe = getReValue(cValue,delim);
+	*cIm = getImValue(cValue,delim);
 	return 0;
 }
 
@@ -140,14 +138,6 @@ int main(int argc, char *argv[]) {
 	float w = 4;
 	float h = 4;
 
-	//args flags
-	bool rflag = false;
-	bool cflag = false;
-	bool Cflag = false;
-	bool wflag = false;
-	bool Hflag = false;
-	bool oflag = false;
-
 	//args values
 	char *rvalue = NULL;
 	char *cvalue = NULL;
@@ -159,79 +149,60 @@ int main(int argc, char *argv[]) {
 	while ((c = getopt(argc, argv, "r:c:C:w:H:o:")) != -1) {
 		switch (c){
 			case 'r':
-				rflag = true;
 				rvalue = optarg;
+				//resolution value
+				char *delim = "x";
+				char *token = strtok(rvalue, delim);
+				width = atof(token);
+				token  = strtok(0, delim);
+				height = atof(token);
 				break;
 			case 'c':
-				cflag = true;
 				cvalue = optarg;
+				//image center value
+				if(analyzerComplexParameter(cvalue,&cRe,&cIm)!=0){
+					printf ("Fatal: invalid specification.\n");
+					return -1;
+				}
 				break;
 			case 'C':
-				Cflag = true;
 				Cvalue = optarg;
+				//C parameter value
+				if(analyzerComplexParameter(Cvalue,&CRe,&CIm)!=0){
+					printf ("Fatal: invalid specification.\n");
+					return -1;
+				}
 				break;
 			case 'w':
-				wflag = true;
 				wvalue = optarg;
+				//width value
+				w = atof(wvalue);
 				break;
 			case 'H':
-				Hflag = true;
 				Hvalue = optarg;
+				//high value
+				h = atof(Hvalue);
 				break;
 			case 'o':
-				oflag = true;
+				//file name value
+				if(strcmp(ovalue, "-") == 0){
+					pgmFile = stdout;
+				} else {
+					pgmFile = fopen(ovalue, "wb");
+					if (pgmFile == NULL) {
+						printf("Fatal: cannot open output file.");
+						return -1;
+					}
+				}
 				ovalue = optarg;
 				break;
 		}
 	}
 
-	//resolution value
-	if(rflag){
-		char *delim = "x";
-		char *token = strtok(rvalue, delim);
-		width = atof(token);
-		token  = strtok(0, delim);
-		height = atof(token);
-	}
-
-	//image center value
-	if(analyzerComplexParameter(cflag,cvalue,&cRe,&cIm)!=0){
-		printf ("Fatal: invalid specification.\n");
-		return -1;
-	}
-
-	//C parameter value
-	if(analyzerComplexParameter(Cflag,Cvalue,&CRe,&CIm)!=0){
-		printf ("Fatal: invalid specification.\n");
-		return -1;
-	}
-
-	//file name value
-	if (oflag) {
-		if(strcmp(ovalue, "-") == 0){
-			pgmFile = stdout;
-		} else {
-			pgmFile = fopen(ovalue, "wb");
-			if (pgmFile == NULL) {
-				printf("Fatal: cannot open output file.");
-				return -1;
-			}
-		}
-	}else{
+	if (!ovalue) {
 		printf("Fatal: -o parameter is mandatory.");
 		return -1;
 	}
-
-	//width value
-	if(wflag){
-		w = atof(wvalue);
-	}
-	//high value
-	if(Hflag){
-		h = atof(Hvalue);
-	}
-
-
 
 	float a, b; // a + bi
 	// Start at negative half the width and height
