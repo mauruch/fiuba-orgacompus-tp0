@@ -96,7 +96,7 @@ Capolupo, Mauro\\
     ./orga2016TP0 -o Julia.pgm
     
 \section{Pruebas}
-\subsection{Prueba 1}
+\subsection*{Prueba 1}
 Generamos el conjunto Julia con par\'ametros v\'alidos
 \begin{center}
     ./orga2016TP0 -r 640x480 -c 1-1i -w 4 -H 2 -o Julia.pgm
@@ -109,7 +109,7 @@ Generamos el conjunto Julia con par\'ametros v\'alidos
 \end{figure}
 
 \raggedright
-\subsection{Prueba 2}
+\subsection*{Prueba 2}
 Generamos el conjunto Julia con par\'ametros v\'alidos
 \begin{center}
     ./orga2016TP0 -r 640x480 -c -1-1i -w 4 -H 2 -o Julia.pgm
@@ -122,7 +122,7 @@ Generamos el conjunto Julia con par\'ametros v\'alidos
 \end{figure}
 
 \raggedright
-\subsection{Prueba 3}
+\subsection*{Prueba 3}
 Generamos el conjunto Julia con par\'ametros v\'alidos
 \begin{center}
     ./orga2016TP0 -r 480x240 -c -0.1+0.1i -w 4 -H 2 -o Julia.pgm
@@ -134,9 +134,22 @@ Generamos el conjunto Julia con par\'ametros v\'alidos
   \caption{Prueba 3}
 \end{figure}
 
+\raggedright
+\subsection*{Prueba 4}
+Generamos el conjunto Julia con par\'ametros v\'alidos sin especificar c 
+\begin{center}
+    ./orga2016TP0 -r 640x480 -w 4 -H 2 -o Julia.pgm
+\end{center}
+\begin{figure}[H]
+  \begin{center}
+  	\includegraphics[width=100mm]{Julia_test4}
+  \end{center}
+  \caption{Prueba 4}
+\end{figure}
+
 \section{Pruebas casos de errores}
 \raggedright
-\subsection{Prueba 1}
+\subsection*{Prueba 1}
 Par\'ametro r inv\'alido
 \begin{center}
     ./orga2016TP0 -r 640-480 -c 1-1i -w 4 -H 2 -o Julia.pgm\\
@@ -146,7 +159,7 @@ Se esperaba que el caracter delimitador sea 'x'. El mensaje que veremos por pant
 Fatal: invalid r specification.
 
 \raggedright
-\subsection{Prueba 2}
+\subsection*{Prueba 2}
 Par\'ametro w inv\'alido
 \begin{center}
     ./orga2016TP0 -r 640x480 -c 1-1i -w A -H 2 -o Julia.pgm\\
@@ -156,7 +169,7 @@ Los valores tanto de 'w' como de 'H' deben ser valores enteros.
 Fatal: invalid w specification.
 
 \raggedright
-\subsection{Prueba 3}
+\subsection*{Prueba 3}
 Par\'ametro c inv\'alido
 \begin{center}
     ./orga2016TP0 -r 640x480 -c a-bi -w 2 -H 2 -o Julia.pgm\\
@@ -166,7 +179,7 @@ Los valores correspondientes a la parte real e imaginaria del par\'ametro comple
 Fatal: invalid c specification.
 
 \raggedright
-\subsection{Prueba 4}
+\subsection*{Prueba 4}
 Par\'ametro r inv\'alido
 \begin{center}
     ./orga2016TP0 -r 0x480 -c 2-3i -w 2 -H 2 -o Julia.pgm\\
@@ -174,6 +187,16 @@ Par\'ametro r inv\'alido
 Tanto el ancho como el alto de la im\'agen deben ser mayores a 0
 \center
 Fatal: invalid r specification.
+
+\raggedright
+\subsection*{Prueba 5}
+Par\'ametro c inv\'alido
+\begin{center}
+    ./orga2016TP0 -r 240x480 -c 2-3 -w 2 -H 2 -o Julia.pgm\\
+\end{center}
+El valor del par\'ametro c debe ser un n\'umero complejo
+\center
+Fatal: invalid c specification.
 
 \newpage
 \raggedright
