@@ -254,5 +254,8 @@ int setResolution(char* rvalue, float* width, float* height) {
 		return -1;
 	}
 	*height = atof(token);
+	if(!(*width > 0) || !(*height>0)){
+		return -1;
+	}
 	return 0;
 }
