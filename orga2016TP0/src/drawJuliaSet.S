@@ -9,7 +9,7 @@
 #    | ---------------------------------|
 # 84 |		char[15] str		|
 # 80 |		float twoab		|
-# 76 |		float bb		|
+# 76 |		float bb			|
 # 72 |		flaot aa		|
 # 68 | 		float x			|
 # 64 | 		float j			|
@@ -17,14 +17,14 @@
 # 56 |		float y			|
 # 52 |		char[100] header	|
 # 48 |		int maxIterations	|
-# 44 |		float dy		|
-# 40 |		float dx		|
+# 44 |		float dy			|
+# 40 |		float dx			|
 # 36 |		float ymax		|
 # 32 |		float xmax		|
 # 28 |		float ymin		|
 # 24 |		float xmin		|
 # 20 |		float b			|
-# 16 |		float a 		|
+# 16 |		float a 			|
 #    |----------------------------------|
 # 12 |			a3		|
 # 8  |			a2	 	|
