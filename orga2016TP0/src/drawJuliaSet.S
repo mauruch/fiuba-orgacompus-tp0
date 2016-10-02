@@ -1,16 +1,18 @@
 #			STACK
 #
-#104 |		param_t* params		|
+#112 |		param_t* params		|
 #    | ---------------------------------|
-#100 |		PADDING			|
-# 96 |			ra		|
-# 92 |			fp		|
-# 88 |			gp		|
+#108 |		PADDING			|
+#104 |			ra		|
+#100 |			fp		|
+# 96 |			gp		|
 #    | ---------------------------------|
-# 84 |		char[15] str		|
-# 80 |		float twoab		|
-# 76 |		float bb			|
-# 72 |		flaot aa		|
+# 92 |		PADDING			|
+# 88 |		char[15] str		|
+# 84 |		float twoab		|
+# 80 |		float bb			|
+# 76 |		flaot aa		|
+# 72 |		float n 		|
 # 68 | 		float x			|
 # 64 | 		float j			|
 # 60 | 		float i			|
@@ -49,15 +51,15 @@
 
 drawJuliaSet:
 	#create stack frame
-	subu	sp,sp,104
-	sw	ra,96(sp)
-	sw	$fp,92
-	sw	gp,88
+	subu	sp,sp,112
+	sw	ra,104(sp)
+	sw	$fp,100(sp)
+	sw	gp,96(sp)
 
 	move 	$fp,sp
 
 	#save 1st argument
-	sw 	a0,104($fp)
+	sw 	a0,112($fp)
 
 pre_for:
 	# t0 = xmin (-params->recW / 2 + params->centerRe)
@@ -129,13 +131,31 @@ first_for:
 	lw 	t0,24($fp)
 	sw 	t0,68($fp)
 
+second_for:
 	# i < params->resW
 	lw 	t0,60($fp)
 	lw 	t1,0($fp)
 	bge 	t0,t1,fin_first_for
 
-second_for:
-	#so something
+	# t0 = a (x)
+	lw 	t0,68($fp)
+	sw	t0,16($fp)
+
+	# t0 = b (y)
+	lw 	t0,56($fp)
+	sw 	t0,20($fp)
+
+	# t0 = n (0)
+	li 	t0,0
+	sw 	t0,72($fp)
+
+third_for:
+	# i < maxIterations
+	lw 	t0,60($fp)
+	lw	t1,48($fp)
+	bge 	t0,t1,fin_second_for
+
+	#do something
 
 fin_first_for:
 	#fputs("\n", params->pgmFile); ????
@@ -152,13 +172,31 @@ fin_first_for:
 	sw	t0,64($fp)
 	b 	first_for
 
+fin_second_for:
+	#char str[15];
+	#sprintf(str, "%d ", n);
+	#fputs(str, params->pgmFile);
+
+
+	# x += dx
+	lw 	t0,68($fp)
+	lw 	t1,40($fp)
+	addu 	t0,t0,t1
+	sw 	t0,68($fp)
+
+	# i++
+	lw 	t0,60($fp)
+	addiu 	t0,t0,1
+	sw 	t0,60($fp)
+	b 	second_for
+
 end_juliaSet:
 	move 	sp,$fp
 
-	lw 	ra,96(sp)
-	lw 	$fp,92(sp)
-	lw 	gp,88(sp)
-	addu 	sp,sp,104
+	lw 	ra,104(sp)
+	lw 	$fp,100(sp)
+	lw 	gp,96(sp)
+	addu 	sp,sp,112
 	
 	jr 	ra
 	.end 	drawJuliaSet
