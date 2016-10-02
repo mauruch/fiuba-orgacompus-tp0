@@ -15,7 +15,7 @@
 # 64 | 		float j			|
 # 60 | 		float i			|
 # 56 |		float y			|
-# 52 |		char[100] header	|
+# 52 |		char[100] header		|
 # 48 |		int maxIterations	|
 # 44 |		float dy			|
 # 40 |		float dx			|
