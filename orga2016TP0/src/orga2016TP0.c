@@ -19,26 +19,26 @@ float getReValue(char* string, char delim);
 float getImValue(char* string, char delim);
 bool isComplexValue(char* string);
 int analyzerComplexParameter(char* cValue, float* cRe, float* cIm);
-int setResolution(char* rvalue, float* width, float* height);
-void drawJuliaSet(FILE* pgmFile, float resW, float resH, float recW, float recH,
+int setResolution(char* rvalue, int* width, int* height);
+void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
 		float compRe, float compIm, float centerRe, float centerIm);
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
-		printf("No options given\n");
-		//return;
+		fprintf(stderr,"No options given\n");
+		return EXIT_FAILURE;
 	}
 	//global variables
 	int c;
-	float resW = 640;
-	float resH = 480;
+	int resW = 640;
+	int resH = 480;
 	float centerRe = 0;
 	float centerIm = 0;
 	float complexRe = 0.285;
 	float complexIm = 0.01;
 	FILE * pgmFile;
-	float recW = 4;
-	float recH = 4;
+	int recW = 4;
+	int recH = 4;
 
 	//args values
 	char *ovalue = NULL;
@@ -49,37 +49,37 @@ int main(int argc, char *argv[]) {
 		case 'r':
 			//resolution value
 			if(setResolution(optarg, &resW, &resH) != 0){
-				printf("Fatal: invalid r specification.\n");
-				return -1;
+				fprintf(stderr,"Fatal: invalid r specification.\n");
+				return EXIT_FAILURE;
 			}
 			break;
 		case 'c':
 			//image center value
 			if (analyzerComplexParameter(optarg, &centerRe, &centerIm) != 0) {
-				printf("Fatal: invalid c specification.\n");
-				return -1;
+				fprintf(stderr,"Fatal: invalid c specification.\n");
+				return EXIT_FAILURE;
 			}
 			break;
 		case 'C':
 			//C parameter value
 			if (analyzerComplexParameter(optarg, &complexRe, &complexIm) != 0) {
-				printf("Fatal: invalid C specification.\n");
-				return -1;
+				fprintf(stderr,"Fatal: invalid C specification.\n");
+				return EXIT_FAILURE;
 			}
 			break;
 		case 'w':
 			//width value
 			if(!isdigit(*optarg)){
-				printf("Fatal: invalid w specification.\n");
-				return -1;
+				fprintf(stderr,"Fatal: invalid w specification.\n");
+				return EXIT_FAILURE;
 			}
 			recW = atof(optarg);
 			break;
 		case 'H':
 			//high value
 			if(!isdigit(*optarg)){
-				printf("Fatal: invalid H specification.\n");
-				return -1;
+				fprintf(stderr,"Fatal: invalid H specification.\n");
+				return EXIT_FAILURE;
 			}
 			recH = atof(optarg);
 			break;
@@ -91,8 +91,8 @@ int main(int argc, char *argv[]) {
 			} else {
 				pgmFile = fopen(ovalue, "wb");
 				if (pgmFile == NULL) {
-					printf("Fatal: cannot open output file.");
-					return -1;
+					fprintf(stderr,"Fatal: cannot open output file.");
+					return EXIT_FAILURE;
 				}
 			}
 			break;
@@ -100,8 +100,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!ovalue) {
-		printf("Fatal: -o parameter is mandatory.");
-		return -1;
+		fprintf(stderr,"Fatal: -o parameter is mandatory.");
+		return EXIT_FAILURE;
 	}
 
 	drawJuliaSet(pgmFile, resW, resH, recW, recH, complexRe, complexIm,
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void drawJuliaSet(FILE* pgmFile, float resW, float resH, float recW, float recH,
+void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
 		float compRe, float compIm, float centerRe, float centerIm) {
 
 	// a + bi
@@ -132,7 +132,7 @@ void drawJuliaSet(FILE* pgmFile, float resW, float resH, float recW, float recH,
 	int maxIterations = 1000;
 
 	char header[100];
-	sprintf(header, "P2\n# Julia Set image\n %f %f \n255\n", resW, resH);
+	sprintf(header, "P2\n# Julia Set image\n %d %d \n255\n", resW, resH);
 	fputs(header, pgmFile);
 
 	//loop through every pixel
@@ -245,7 +245,7 @@ int analyzerComplexParameter(char* cValue, float* cRe, float* cIm) {
 	return 0;
 }
 
-int setResolution(char* rvalue, float* width, float* height) {
+int setResolution(char* rvalue, int* width, int* height) {
 	char *delim = "x";
 	char *token = strtok(rvalue, delim);
 	*width = atof(token);
@@ -255,7 +255,7 @@ int setResolution(char* rvalue, float* width, float* height) {
 	}
 	*height = atof(token);
 	if(!(*width > 0) || !(*height>0)){
-		return -1;
+		return EXIT_FAILURE;
 	}
 	return 0;
 }
