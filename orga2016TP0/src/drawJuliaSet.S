@@ -119,9 +119,40 @@ pre_for:
 	sw	t0,60($fp)
 	sw	t0,64($fp)
 
+first_for:
+	# j < params->resH
+	lw	t0,64($fp)
+	lw 	t1,4(a0)
+	bge 	t0,t1,end_juliaSet
+	
+	# t0 = x (xmin)
+	lw 	t0,24($fp)
+	sw 	t0,68($fp)
 
+	# i < params->resW
+	lw 	t0,60($fp)
+	lw 	t1,0($fp)
+	bge 	t0,t1,fin_first_for
 
-end:
+second_for:
+	#so something
+
+fin_first_for:
+	#fputs("\n", params->pgmFile); ????
+	
+	# y += dy
+	lw t0,56($fp)
+	lw t1,44($fp)
+	addu 	t0,t0,t1
+	sw	t0,56($fp)
+
+	# j++
+	lw 	t0,64($fp)
+	addiu 	t0,t0,1
+	sw	t0,64($fp)
+	b 	first_for
+
+end_juliaSet:
 	move 	sp,$fp
 
 	lw 	ra,96(sp)
