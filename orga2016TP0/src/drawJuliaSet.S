@@ -135,7 +135,7 @@ second_for:
 	# i < params->resW
 	lw 	t0,60($fp)
 	lw 	t1,0($fp)
-	bge 	t0,t1,fin_first_for
+	bge 	t0,t1,end_first_for
 
 	# t0 = a (x)
 	lw 	t0,68($fp)
@@ -153,11 +153,11 @@ third_for:
 	# i < maxIterations
 	lw 	t0,60($fp)
 	lw	t1,48($fp)
-	bge 	t0,t1,fin_second_for
+	bge 	t0,t1,end_second_for
 
 	#do something
 
-fin_first_for:
+end_first_for:
 	#fputs("\n", params->pgmFile); ????
 	
 	# y += dy
@@ -172,7 +172,7 @@ fin_first_for:
 	sw	t0,64($fp)
 	b 	first_for
 
-fin_second_for:
+end_second_for:
 	#char str[15];
 	#sprintf(str, "%d ", n);
 	#fputs(str, params->pgmFile);
