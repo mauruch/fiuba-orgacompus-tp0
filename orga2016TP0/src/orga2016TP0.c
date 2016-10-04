@@ -22,6 +22,7 @@ int analyzerComplexParameter(char* cValue, float* cRe, float* cIm);
 int setResolution(char* rvalue, int* width, int* height);
 void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
 		float compRe, float compIm, float centerRe, float centerIm);
+void fputsChecked(const char *s, FILE *stream);
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
@@ -132,8 +133,8 @@ void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
 	int maxIterations = 1000;
 
 	char header[100];
-	sprintf(header, "P2\n# Julia Set image\n %d %d \n255\n", resW, resH);
-	fputs(header, pgmFile);
+	sprintf(header, "P2\n%d %d \n255\n", resW, resH);
+	fputsChecked(header, pgmFile);
 
 	//loop through every pixel
 	// Start y
@@ -147,7 +148,7 @@ void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
 			b = y;
 			int n;
 			//start the iteration process
-			for (n = 0; i < maxIterations; n++) {
+			for (n = 0; n < maxIterations; n++) {
 				float aa = a * a;
 				float bb = b * b;
 
@@ -160,10 +161,10 @@ void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
 			}
 			char str[15];
 			sprintf(str, "%d ", n);
-			fputs(str, pgmFile);
+			fputsChecked(str, pgmFile);
 			x += dx;
 		}
-		fputs("\n", pgmFile);
+		fputsChecked("\n", pgmFile);
 		y += dy;
 	}
 }
@@ -258,4 +259,11 @@ int setResolution(char* rvalue, int* width, int* height) {
 		return EXIT_FAILURE;
 	}
 	return 0;
+}
+
+void fputsChecked(const char *s, FILE *stream) {
+	int status = fputs(s, stream);
+	if (status < 0) {
+		fprintf(stderr,"Error: fputs returned EOF \n");
+	}
 }
