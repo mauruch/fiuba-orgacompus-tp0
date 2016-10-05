@@ -142,7 +142,7 @@ void drawJuliaSet(param_t* params) {
 	int maxIterations = 1000;
 
 	char header[100];
-	sprintf(header, "P2\n# Julia Set image\n %d %d \n255\n", params->resW, params->resH);
+	sprintf(header, "P2\n%d %d \n255\n", params->resW, params->resH);
 	fputs(header, params->pgmFile);
 
 	//loop through every pixel
