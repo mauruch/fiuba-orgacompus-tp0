@@ -14,17 +14,17 @@
 #include <unistd.h>
 #include <string.h>
 
-typedef struct{
+typedef struct {
 	size_t resW;
 	size_t resH;
-	size_t recW;
-	size_t recH;
+	float recW;
+	float recH;
 	float complexRe;
 	float complexIm;
 	float centerRe;
 	float centerIm;
 	FILE* pgmFile;
-}param_t;
+} param_t;
 
 char getDelimSymbol(char* cvalue);
 float getReValue(char* string, char delim);
@@ -157,7 +157,7 @@ void drawJuliaSet(param_t* params) {
 			b = y;
 			int n;
 			//start the iteration process
-			for (n = 0; i < maxIterations; n++) {
+			for (n = 0; n < maxIterations; n++) {
 				float aa = a * a;
 				float bb = b * b;
 
