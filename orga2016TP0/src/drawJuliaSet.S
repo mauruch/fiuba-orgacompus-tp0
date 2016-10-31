@@ -34,6 +34,19 @@
 # 0  |			a0	 	|
 #     ----------------------------------
 
+	# 0 parms.UL_re = upper_left_re;
+	# 4 parms.UL_im = upper_left_im;
+	# 8 parms.LR_re = lower_right_re;
+	# 12 parms.LR_im = lower_right_im;
+ #    16 parms.d_re = (lower_right_re - upper_left_re) / x_res;
+ #    20 parms.d_im = (upper_left_im - lower_right_im) / y_res;
+ #    24 parms.x_res = x_res;
+ #    28 parms.y_res = y_res;
+ #    32 parms.shades = 255;
+	# 36 parms.cp_re = c_param_re;
+	# 40 parms.cp_im = c_param_im;
+ #    44 parms.fd = fileno(output);
+
 # typedef struct {
 # 0	size_t resW;
 # 4	size_t resH;
@@ -62,55 +75,37 @@ drawJuliaSet:
 	sw 	a0,112($fp)
 
 pre_for:
-	# t0 = xmin (-params->recW / 2 + params->centerRe)
-	lw 	t0,8(a0)
-	neg 	t0,t0
-	srl 	t0,t0,1
-	lw 	t1,24(a0)
-	add 	t0,t0,t1
+	# t0 = xmin = UL_re
+	lw 	t0, 0(a0)
 	sw 	t0,24($fp)
 
-	# t0 = ymin (-params->recH / 2 + params->centerIm)
+	# t0 = ymin = LR_im
 	lw	t0,12(a0)
-	neg 	t0,t0
-	srl 	t0,t0,1
-	lw 	t1,28(a0)
-	add 	t0,t0,t1
 	sw 	t0,28($fp)
 
-	# t0 = xmax (xmin + params->recW)
-	lw 	t0,24($fp)
-	lw 	t1,8(a0)
-	add 	t0,t0,t1
+	# t0 = xmax = LR_re
+	lw 	t0, 8(a0)
 	sw 	t0,32($fp)
 
-	# t0 = ymax (ymin + params->recH)
-	lw	t0,28($fp)
-	lw 	t1,12(a0)
-	add 	t0,t1,t0
+	# t0 = ymax = UL_im
+	lw 	t0, 4(a0)
 	sw 	t0,36($fp)
 
-	# t0 = dx ((xmax - xmin) / (params->resW))
-	lw 	t0,32($fp)
-	lw 	t1,24($fp)
-	sub 	t0,t0,t1
-	lw 	t2,0(a0)
-	srl 	t0,t0,0(t2)
+	# t0 = dx = d_Re
+	lw 	t0, 16(a0)
 	sw 	t0,40($fp)
 
-	# t0 = dy ((ymax - ymin) / (params->resH))
-	lw 	t0,36($fp)
-	lw 	t1,28($fp)
-	sub 	t0,t0,t1
-	lw 	t2,4($fp)
-	srl 	t0,t0,0(t2)
+	# t0 = dy = d_Im
+	lw 	t0, 20(a0)
 	sw 	t0,44($fp)
 
 	# t0 = maxIterations (1000)
 	li 	t0,1000
 	sw 	t0,48,($fp)
 
-	# fputs(header, params->pgmFile); ????
+	#char header[100];
+	#sprintf(header, "P2\n%d %d \n255\n", params->resW, params->resH);
+	#fputs(header, params->pgmFile);
 
 	# t0 = y (ymin)
 	lw 	t0,28($fp)
@@ -135,7 +130,7 @@ second_for:
 	# i < params->resW
 	lw 	t0,60($fp)
 	lw 	t1,0($fp)
-	bge 	t0,t1,end_first_for
+	bge t0,t1,end_second_for
 
 	# t0 = a (x)
 	lw 	t0,68($fp)
@@ -150,14 +145,46 @@ second_for:
 	sw 	t0,72($fp)
 
 third_for:
-	# i < maxIterations
-	lw 	t0,60($fp)
+	# n < maxIterations
+	lw 	t0,72($fp)
 	lw	t1,48($fp)
-	bge 	t0,t1,end_second_for
+	bge t0,t1,end_third_for
 
-	#do something
+	lw t5, 16($fp)
+	lw t6, 20($fp)
 
-end_first_for:
+	mul t5, t5, t5 #aa
+	mul t6, t6, t6 #bb
+
+	li t9, 4
+	add t7, t5, t6 #aa+bb
+	bgt t7, t9, breakFor
+
+	#float twoab = 2 * a * b;
+	lw t7, 16($fp) #a
+	lw t8, 20($fp) #b
+	mul t7, t7, t8 #a*b
+	li t9, 2
+	mul t7, t7, t9 #twoab = a*b*2
+
+	sub t9, t5, t6 #aa-bb
+
+	#a = aa - bb + params->complexRe;
+	add t9, t9, 36(a0)
+	sw t9, 16($fp)
+
+	#b = twoab + params->complexIm;
+	add t7, t7, 40($fp)
+	sw t7, 20($fp)
+
+	#n++
+	lw t4, 72($fp)
+	addi t4, t4, 1
+	sw 	t0,72($fp)
+
+	b third_for
+
+end_second_for:
 	#fputs("\n", params->pgmFile); ????
 	
 	# y += dy
@@ -172,7 +199,7 @@ end_first_for:
 	sw	t0,64($fp)
 	b 	first_for
 
-end_second_for:
+end_third_for:
 	#char str[15];
 	#sprintf(str, "%d ", n);
 	#fputs(str, params->pgmFile);
