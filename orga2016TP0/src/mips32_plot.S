@@ -54,6 +54,8 @@
 .ent mips32_plot
 .globl mips32_plot
 
+# t0 = *parms_t
+
 mips32_plot:
 	subu	sp,sp,88
 	sw	gp,72(sp)
@@ -84,9 +86,8 @@ mips32_plot:
 	#	(unsigned)parms->y_res,
 	#	(unsigned)parms->shades);
 
-	#TODO hacer my_string_length
     la	a0,first_line
-    jal	my_string_length
+    jal	my_string_length	#TODO hacer my_string_length
     lw	t3,v0
     addui	t7,t7,3	#este va a ser el tercer parametro del write
 
@@ -118,22 +119,46 @@ mips32_plot:
 	#TODO escribir en stderr y terminar
 	b 	termina_error
 
+pre_for:
+	sw 	zero,48($fp)
+	sw 	zero,44($fp)
+	sw 	zero,52($fp)
+	lw	t0,88($fp)
+	lw	t1,4(t0)
+	sw 	t1,20($fp)
+	lw	t2,0(t0)
+	sw 	t2,16($fp)
+	lw 	t3,40(t0)
+	sw 	t3,82($fp)
+
 	#for (y = 0, ci = parms->UL_im; 
     #y < parms->y_res; 
     #++y, ci -= parms->d_im) {
-	sw 	zero,48($fp)
-	lw	t0,88($fp)
-	lw	t0,4($fp)
-	sw 	t0,20($fp)
 primer_for:
-    lw	t0,48($fp)
-    lw	t1,88($fp)
-    lw	t1,36($fp)
-    bge 	t0,t1,termina_primer_for
+    lw	t1,48($fp)
+    lw	t2,36(t0)
+    bge 	t1,t2,termina_primer_for
 
+	#for (x = 0, cr = parms->UL_re; 
+    #x < parms->x_res; 
+    #++x, cr += parms->d_re) {
 segundo_for:
+	lw	t3,44($fp)
+	lw	t4,32(t0)
+	bge 	t3,t4,termina_segundo_for
+
+	lw	t5,16($fp)
+	sw 	t5,24($fp)
+	lw	t5,20($fp)
+	sw 	t5,28($fp)
+
+	#for (c = 0; c < parms->shades; ++c) {
+tercer_for:
+
 
 termina_primer_for:
+
+termina_segundo_for:
 
 
 termina_error:
