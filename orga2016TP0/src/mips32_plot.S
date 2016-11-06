@@ -110,7 +110,7 @@ segundo_for:
 tercer_for:
 	lw	t7,52($fp)		# t7 = c
 	lw	t8,40(t0)		# t8 = shades
-	bge 	t7,t8,termina_tercer_for
+	bge 	t7,t8,break_tercer_for:
 
 	lw	t1,24($fp)		# t1 = zr
 	lw 	t2,28($fp)		# t2 = zi
@@ -150,12 +150,6 @@ tercer_for:
 	addui	t7,t7,1
 	sw 	t7,52($fp)
 
-	#TODO
-	#if (fprintf(fp, "%u\n", (unsigned)c) < 0) {
-	#fprintf(stderr, "i/o error.\n");
-	#return -1;
-	#}
-
 	b 	tercer_for
 
 #++y, ci -= parms->d_im
@@ -169,8 +163,15 @@ termina_segundo_for:
 	sw 	t3,20($fp)
 	b 	primer_for
 
-#++x, cr += parms->d_re
 termina_tercer_for:
+	#TODO
+	#if (fprintf(fp, "%u\n", (unsigned)c) < 0) {
+	#fprintf(stderr, "i/o error.\n");
+	#return -1;
+	#}
+	
+#++x, cr += parms->d_re
+break_tercer_for:
 	lw	t1,44($fp)		# t1 = x
 	addui	t1,t1,1
 	sw 	t1,44($fp)
