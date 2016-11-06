@@ -14,43 +14,32 @@
 #include <unistd.h>
 #include <string.h>
 
-typedef struct {
-	size_t resW;
-	size_t resH;
-	float recW;
-	float recH;
-	float complexRe;
-	float complexIm;
-	float centerRe;
-	float centerIm;
-	FILE* pgmFile;
-} param_t;
-
 char getDelimSymbol(char* cvalue);
 float getReValue(char* string, char delim);
 float getImValue(char* string, char delim);
 bool isComplexValue(char* string);
 int analyzerComplexParameter(char* cValue, float* cRe, float* cIm);
-int setResolution(char* rvalue,param_t* param);
-void drawJuliaSet(param_t* params);
+int setResolution(char* rvalue, int* width, int* height);
+void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
+		float compRe, float compIm, float centerRe, float centerIm);
+void fputsChecked(const char *s, FILE *stream);
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
 		fprintf(stderr,"No options given\n");
 		return EXIT_FAILURE;
 	}
-	//default params values
-	param_t params;
-	params.resW = 640;
-	params.resH = 480;
-	params.centerIm = 0;
-	params.centerRe = 0;
-	params.complexIm = 0.01;
-	params.complexRe = 0.285;
-	params.recW = 4;
-	params.recH = 4;
-
+	//global variables
 	int c;
+	int resW = 640;
+	int resH = 480;
+	float centerRe = 0;
+	float centerIm = 0;
+	float complexRe = 0.285;
+	float complexIm = 0.01;
+	FILE * pgmFile;
+	int recW = 4;
+	int recH = 4;
 
 	//args values
 	char *ovalue = NULL;
@@ -60,21 +49,21 @@ int main(int argc, char *argv[]) {
 		switch (c) {
 		case 'r':
 			//resolution value
-			if(setResolution(optarg,&params) != 0){
+			if(setResolution(optarg, &resW, &resH) != 0){
 				fprintf(stderr,"Fatal: invalid r specification.\n");
 				return EXIT_FAILURE;
 			}
 			break;
 		case 'c':
 			//image center value
-			if (analyzerComplexParameter(optarg, &(params.centerRe), &(params.centerIm)) != 0) {
+			if (analyzerComplexParameter(optarg, &centerRe, &centerIm) != 0) {
 				fprintf(stderr,"Fatal: invalid c specification.\n");
 				return EXIT_FAILURE;
 			}
 			break;
 		case 'C':
 			//C parameter value
-			if (analyzerComplexParameter(optarg, &(params.complexRe), &(params.complexIm)) != 0) {
+			if (analyzerComplexParameter(optarg, &complexRe, &complexIm) != 0) {
 				fprintf(stderr,"Fatal: invalid C specification.\n");
 				return EXIT_FAILURE;
 			}
@@ -85,7 +74,7 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr,"Fatal: invalid w specification.\n");
 				return EXIT_FAILURE;
 			}
-			params.recW = atof(optarg);
+			recW = atof(optarg);
 			break;
 		case 'H':
 			//high value
@@ -93,16 +82,16 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr,"Fatal: invalid H specification.\n");
 				return EXIT_FAILURE;
 			}
-			params.recH = atof(optarg);
+			recH = atof(optarg);
 			break;
 		case 'o':
 			ovalue = optarg;
 			//file name value
 			if (strcmp(ovalue, "-") == 0) {
-				params.pgmFile = stdout;
+				pgmFile = stdout;
 			} else {
-				params.pgmFile = fopen(ovalue, "wb");
-				if (params.pgmFile == NULL) {
+				pgmFile = fopen(ovalue, "wb");
+				if (pgmFile == NULL) {
 					fprintf(stderr,"Fatal: cannot open output file.");
 					return EXIT_FAILURE;
 				}
@@ -116,43 +105,45 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	drawJuliaSet(&params);
+	drawJuliaSet(pgmFile, resW, resH, recW, recH, complexRe, complexIm,
+			centerRe, centerIm);
 
 	return 0;
 }
 
-void drawJuliaSet(param_t* params) {
+void drawJuliaSet(FILE* pgmFile, int resW, int resH, int recW, int recH,
+		float compRe, float compIm, float centerRe, float centerIm) {
 
 	// a + bi
 	float a, b;
 
 	// Start at negative half the rectangleDrawWidth and resolutionHeight
-	float xmin = -params->recW / 2 + params->centerRe;
-	float ymin = -params->recH / 2 + params->centerIm;
+	float xmin = -recW / 2 + centerRe;
+	float ymin = -recH / 2 + centerIm;
 
 	// x goes from xmin to xmax
-	float xmax = xmin + params->recW;
+	float xmax = xmin + recW;
 	// y goes from ymin to ymax
-	float ymax = ymin + params->recH;
+	float ymax = ymin + recH;
 
 	// Calculate amount we increment x,y for each pixel
-	float dx = (xmax - xmin) / (params->resW);
-	float dy = (ymax - ymin) / (params->resH);
+	float dx = (xmax - xmin) / (resW);
+	float dy = (ymax - ymin) / (resH);
 
 	int maxIterations = 1000;
 
 	char header[100];
-	sprintf(header, "P2\n%d %d \n255\n", params->resW, params->resH);
-	fputs(header, params->pgmFile);
+	sprintf(header, "P2\n%d %d \n255\n", resW, resH);
+	fputsChecked(header, pgmFile);
 
 	//loop through every pixel
 	// Start y
 	float y = ymin;
 	int j, i;
-	for (j = 0; j < params->resH; j++) {
+	for (j = 0; j < resH; j++) {
 		// Start x
 		float x = xmin;
-		for (i = 0; i < params->resW; i++) {
+		for (i = 0; i < resW; i++) {
 			a = x;
 			b = y;
 			int n;
@@ -165,15 +156,15 @@ void drawJuliaSet(param_t* params) {
 					break;
 
 				float twoab = 2.0 * a * b;
-				a = aa - bb + params->complexRe;
-				b = twoab + params->complexIm;
+				a = aa - bb + compRe;
+				b = twoab + compIm;
 			}
 			char str[15];
 			sprintf(str, "%d ", n);
-			fputs(str, params->pgmFile);
+			fputsChecked(str, pgmFile);
 			x += dx;
 		}
-		fputs("\n", params->pgmFile);
+		fputsChecked("\n", pgmFile);
 		y += dy;
 	}
 }
@@ -255,17 +246,24 @@ int analyzerComplexParameter(char* cValue, float* cRe, float* cIm) {
 	return 0;
 }
 
-int setResolution(char* rvalue,param_t* params) {
+int setResolution(char* rvalue, int* width, int* height) {
 	char *delim = "x";
 	char *token = strtok(rvalue, delim);
-	params->resW = atof(token);
+	*width = atof(token);
 	token = strtok(0, delim);
 	if(!token){
 		return -1;
 	}
-	params->resH = atof(token);
-	if( (params->resH <= 0) || (params->resW <= 0)){
+	*height = atof(token);
+	if(!(*width > 0) || !(*height>0)){
 		return EXIT_FAILURE;
 	}
 	return 0;
+}
+
+void fputsChecked(const char *s, FILE *stream) {
+	int status = fputs(s, stream);
+	if (status < 0) {
+		fprintf(stderr,"Error: fputs returned EOF \n");
+	}
 }

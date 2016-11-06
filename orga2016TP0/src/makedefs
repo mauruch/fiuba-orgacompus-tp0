@@ -1,0 +1,61 @@
+#! /bin/sh
+
+# Ugly function to make our error message more visible among the
+# garbage that is output by some versions of make(1).
+#
+# By now all shells must have functions.
+#
+error() {
+	# Alas, tput(1) is not portable so we can't use visual effects.
+	echo "ATTENTION:" 1>&2;
+	echo "ATTENTION:" $* 1>&2;
+	echo "ATTENTION:" 1>&2;
+	exit 1
+}
+
+SYSTEM=`(uname -s) 2>/dev/null`
+RELEASE=`(uname -r) 2>/dev/null`
+MACHINE=`(uname -m) 2>/dev/null`
+VERSION=`(uname -v) 2>/dev/null`
+SYSLIBS=
+
+case "$SYSTEM.$RELEASE" in
+NetBSD.3*)
+	SYSTYPE=NETBSD3
+	;;
+Linux.2*)
+	SYSTYPE=LINUX2
+	;;
+Linux.3*)
+	SYSTYPE=LINUX3
+	;;
+Linux.4*)
+	SYSTYPE=LINUX4
+	;;
+SunOS.5*)
+	SYSTYPE=SUNOS5
+	;;
+*)
+	error "Unknown system type: $SYSTEM $RELEASE"
+	;;
+esac
+
+: ${CC='gcc $(WARN)'} ${OPT='-O'} ${DEBUG='-g'} ${WARN='-Wall'}
+
+case "$CCARGS" in
+*-DUSE_SMOOTH_SHADING*)
+	SYSLIBS="$SYSLIBS -lm"
+	;;
+esac
+
+export SYSTYPE SYSLIBS CC OPT DEBUG OPTS
+
+sed 's/  / /g' <<EOF
+SYSTYPE	= $SYSTYPE
+SYSLIBS	= $AUXLIBS $SYSLIBS
+CC	= $CC $CCARGS
+OPT	= $OPT
+DEBUG	= $DEBUG
+EXPORT	= AUXLIBS='$AUXLIBS' CCARGS='$CCARGS' OPT='$OPT' DEBUG='$DEBUG'
+WARN	= $WARN
+EOF
