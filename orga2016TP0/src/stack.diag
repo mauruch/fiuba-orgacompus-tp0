@@ -3,7 +3,7 @@
 84	Padding
 80	ra
 76	$fp
-72	ra
+72	gp
 -------------------------
 68	File	*fp
 64	float cpi

@@ -91,7 +91,7 @@ pre_for:
 primer_for:
 	lw	t1,48($fp)		# t1 = y
 	lw	t2,36(t0)		# t2 = y_res
-	bge 	t1,t2,termina_primer_for
+	bge 	t1,t2,terminar
 
 	#for (x = 0, cr = parms->UL_re;
 	#x < parms->x_res;
@@ -128,7 +128,7 @@ tercer_for:
 	#sr = zr * zr - zi * zi + cpr;
 	mulo	t7,t1,t1
 	mulo	t8,t2,t2		#TODO mas adelante quizas podamos sacar esta linea por ahora la dejo para que sea mas prolijo
-	rem		t8,t7,t8
+	subu	t8,t7,t8
 	addu 	t5,t8,t3		# t5 = sr
 	sw 	t5,32($fp)
 
@@ -145,16 +145,61 @@ tercer_for:
 	#zi = si;
 	sw 	t6,28($fp)
 
+	#++c
+	lw	t7,52($fp)
+	addui	t7,t7,1
+	sw 	t7,52($fp)
+
+	#TODO
+	#if (fprintf(fp, "%u\n", (unsigned)c) < 0) {
+	#fprintf(stderr, "i/o error.\n");
+	#return -1;
+	#}
+
 	b 	tercer_for
 
-termina_primer_for:
-
+#++y, ci -= parms->d_im
 termina_segundo_for:
+	lw	t1,48($fp)		# t1 = y
+	addui 	t1,t1,1
+	sw 	t1,48($fp)
+	lw 	t2,20($fp)		# t2 = ci
+	lw	t3,20(t0)		# t3 = d_im
+	subu	t3,t2,t3
+	sw 	t3,20($fp)
+	b 	primer_for
 
+#++x, cr += parms->d_re
 termina_tercer_for:
-
+	lw	t1,44($fp)		# t1 = x
+	addui	t1,t1,1
+	sw 	t1,44($fp)
+	lw	t2,16($fp)		# t2 = cr
+	lw	t3,16(t0)		# t3 = d_re
+	addu 	t3,t2,t3
+	sw 	t3,16($fp)
+	b 	segundo_for
 
 termina_error:
+
+terminar:
+	#TODO
+	#if (fflush(fp) != 0) {
+	#fprintf(stderr, "cannot flush output file.\n");
+	#return -1;
+	#}
+
+	li	v0,0
+	move	sp,$fp
+	lw	ra,80(sp)
+	lw	$fp,76(sp)
+	lw	gp,72(sp)
+	addu 	sp,sp,88
+
+	jr	ra
+
+	.end mips32_plot
+
 
 .data
 	first_line:	.asciiz "P2\n%u\n%u\n%u\n"
