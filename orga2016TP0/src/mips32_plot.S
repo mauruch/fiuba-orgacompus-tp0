@@ -64,13 +64,15 @@ mips32_plot:
 	syscall
 
     #if (res < 0) {
-	#	fprintf(stderr, "io error.\n");
-	#	return -1;
+	#	fprintf(s...
+	#	retu...
 	#}
 	sw 	v0,56($fp)
 	bgez	v0, primer_for
 
 	#TODO escribir en stderr y terminar
+	#	fprintf(stderr, "io error.\n");
+	#	return -1;
 	b 	termina_error
 
 pre_for:
@@ -91,7 +93,7 @@ pre_for:
 primer_for:
 	lw	t1,48($fp)		# t1 = y
 	lw	t2,36(t0)		# t2 = y_res
-	bge 	t1,t2,terminar
+	bge 	t1,t2,termina_primer_for
 
 	#for (x = 0, cr = parms->UL_re;
 	#x < parms->x_res;
@@ -127,7 +129,7 @@ tercer_for:
 
 	#sr = zr * zr - zi * zi + cpr;
 	mulo	t7,t1,t1
-	mulo	t8,t2,t2		#TODO mas adelante quizas podamos sacar esta linea por ahora la dejo para que sea mas prolijo
+	mulo	t8,t2,t2
 	subu	t8,t7,t8
 	addu 	t5,t8,t3		# t5 = sr
 	sw 	t5,32($fp)
@@ -152,6 +154,15 @@ tercer_for:
 
 	b 	tercer_for
 
+termina_primer_for:
+	#TODO
+	#if (fflush(fp) != 0) {
+	#fprintf(stderr, "cannot flush output file.\n");
+	#return -1;
+	#}
+
+	b 	terminar_ok
+
 #++y, ci -= parms->d_im
 termina_segundo_for:
 	lw	t1,48($fp)		# t1 = y
@@ -169,7 +180,7 @@ termina_tercer_for:
 	#fprintf(stderr, "i/o error.\n");
 	#return -1;
 	#}
-	
+
 #++x, cr += parms->d_re
 break_tercer_for:
 	lw	t1,44($fp)		# t1 = x
@@ -182,15 +193,13 @@ break_tercer_for:
 	b 	segundo_for
 
 termina_error:
+	li 	v0,-1 		# no estoy seguro si esto anda
+	b 	terminar
+
+terminar_ok:
+	li	v0,0
 
 terminar:
-	#TODO
-	#if (fflush(fp) != 0) {
-	#fprintf(stderr, "cannot flush output file.\n");
-	#return -1;
-	#}
-
-	li	v0,0
 	move	sp,$fp
 	lw	ra,80(sp)
 	lw	$fp,76(sp)
@@ -200,8 +209,7 @@ terminar:
 	jr	ra
 
 	.end mips32_plot
-
-
+	
 .data
 	first_line:	.asciiz "P2\n%u\n%u\n%u\n"
 	error: .asciiz "io error.\n"
