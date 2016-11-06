@@ -3,11 +3,11 @@
 #include <asm/asm.h>
 #include <sys/syscall.h>
 
+BUFFSIZE = 8192
+
 .text
 .ent mips32_plot
 .globl mips32_plot
-
-# t0 = *parms_t
 
 mips32_plot:
 	subu	sp,sp,88
@@ -25,54 +25,82 @@ mips32_plot:
 	lw	t0,28(a0)
 	sw	t0,64($fp)
 
-	#FILE *fp = fdopen(parms->fd, "w")	
-	lw	t0,44(a0)
-	move	a0,t0
-	li 	a1,O_RDWR
-	li 	v0,SYS_open
-	syscall
+	#contador de bytes a escribir
+	move s1, zero
 
-	sw	v0,68($fp)
+	#guardo fd en el stack
+    lw	t0,44(a0)
+    sw	t0,68($fp)
 
-	#res = fprintf(fp, "P2\n%u\n%u\n%u\n",
+	#Cargo el header en el buffer
+    la t0, header
+    la t1, buffer
+
+	lb t2, 0(t0)
+    sb t2, 0(t1)
+    lb t2, 1(t0)
+    sb t2, 1(t1)
+    lb t2, 2(t0)
+    sb t2, 2(t1)
+
+    addiu s1, s1, 3
+
+    #res = fprintf(fp, "P2\n%u\n%u\n%u\n",
 	#	(unsigned)parms->x_res,
 	#	(unsigned)parms->y_res,
 	#	(unsigned)parms->shades);
 
-	la	a0,first_line
-	jal	my_string_length	#TODO hacer my_string_length
-	lw	t4,v0
-	addui	t7,t4,3			#este va a ser el tercer parametro del write
+ 	#GUARDO x_res
+	lw	t0, 88($fp)
+	lw s2, 32(t0) #x_res
+	la t9, xres_endline
+    b print_uinteger
 
-	#concateno los enteros al final del string
-	lw	t0,88($fp)
-	lw	t1,32(t0)
-	lw	t2,36(t0)
-	lw	t3,40(t0)
-    
-	la	t5,first_line
-	addu	t5,t5,t4
-	sb 	t1,0(t5)		#TODO necesito castear el valor entero que está en t0 a un char
-	sb 	t2,1(t5)		#TODO necesito castear el valor entero que está en t0 a un char
-	sb 	t3,2(t5)		#TODO necesito castear el valor entero que está en t0 a un char
 
-	lw	t1,68($fp)
-	move	a0,t1
-	la	a1,first_line
-	lw	a2,t7
-	li 	v0,SYS_write
-	syscall
+xres_endline:
+	#GUARDO UN ENDLINE
+	la t3, endline
+	lb t3, 0(t3)
+	addu t7,t1,s1
+	sb t3, 0(t7)
+	addiu s1, s1, 1
+
+	#GUARDO y_res
+	lw	t0, 88($fp)
+	lw s2, 36(t0) #x_res
+    la t9, yres_endline
+    b print_uinteger
+
+#otro endline
+yres_endline:
+	la t3, endline
+	lb t3, 0(t3)
+	addu t7,t1,s1
+	sb t3, 0(t7)
+	addiu s1, s1, 1
+
+	#Guardo shades
+	lw	t0, 88($fp)
+	lw s2, 40(t0) #shades
+	la t9, lastHeaderEndLine
+	b print_uinteger
+
+#ultimo endline header
+lastHeaderEndLine:
+	la t3, endline
+	lb t3, 0(t3)
+	addu t7,t1,s1
+	sb t3, 0(t7)
+	addiu s1, s1, 1
 
     #if (res < 0) {
-	#	fprintf(s...
-	#	retu...
+	#	fprintf(stderr, "io error.\n");
+	#	return -1;
 	#}
 	sw 	v0,56($fp)
 	bgez	v0, primer_for
 
 	#TODO escribir en stderr y terminar
-	#	fprintf(stderr, "io error.\n");
-	#	return -1;
 	b 	termina_error
 
 pre_for:
@@ -175,11 +203,88 @@ termina_segundo_for:
 	b 	primer_for
 
 termina_tercer_for:
-	#TODO
-	#if (fprintf(fp, "%u\n", (unsigned)c) < 0) {
-	#fprintf(stderr, "i/o error.\n");
-	#return -1;
-	#}
+
+	li t0, BUFFSIZE
+	bge s1, t0, escribirEnArchivo1
+
+    la t0, buffer #cargamos addres de buffer a escribir
+    addu t0, t0, s1
+
+   	lw t1, 52($fp)
+	move s2, t1 #s2 = c
+    la t9, escribirEndLine
+	b print_uinteger
+
+
+
+escribirEnArchivo1:
+	li v0, SYS_write			#write syscal value
+
+	lw	t0, 88($fp)
+	lw a0, 44(t0) #params->fd
+
+    la a1, buffer
+    move a2, s1
+
+    la t0, terminator
+    lb t0, 0(t0)
+    addu t1, a1, s1
+    sb t0, 0(t1)
+
+    syscall
+
+    blt v0, zero, mostrarError
+	move s1, zero
+	la t1, buffer
+
+    la t0, terminator
+    lb t0, 0(t0)
+    addu t1, t1, s1
+    sb t0, 0(t1)
+
+    b termina_tercer_for
+
+escribirEndLine:
+	li t0, BUFFSIZE
+	bge s1, t0, escribirEnArchivo2
+	la t0, buffer
+	la t4, endline
+	lb t4, 0(t4)
+    addu t0, t0, s1
+    sb t4, 0(t0)
+    addiu s1, s1, 1
+	b break_tercer_for
+
+escribirEnArchivo2:
+	li v0, SYS_write			#write syscal value
+
+    lw	t0, 88($fp)
+	lw a0, 44(t0) #params->fd
+
+    la a1, buffer
+
+    la t0, terminator
+    lb t0, 0(t0)
+    addu t1, a1, s1
+    sb t0, 0(t1)
+    move a2, s1
+
+
+    syscall
+
+    blt v0, zero, mostrarError
+
+    la t1, buffer
+
+    la t0, terminator
+    lb t0, 0(t0)
+    addu t1, t1, s3
+    sb t0, 0(t1)
+
+	move s3, zero
+
+    b escribirEndLine
+
 
 #++x, cr += parms->d_re
 break_tercer_for:
@@ -192,12 +297,58 @@ break_tercer_for:
 	sw 	t3,16($fp)
 	b 	segundo_for
 
+
+print_uinteger:
+	li t0, 10
+	li t7,10
+
+	move t1,s2
+	li t6, 1
+
+
+calculoOrden:
+	divu t1,s2,t7
+	blt t1,t6, finCalculo
+	mul t7,t7,10
+	b calculoOrden
+
+finCalculo:
+	divu t7,t7,10
+
+loopImpresion:
+	blt t7, t6, fin
+	divu t1, s2, t7
+	la t2, digits
+	addu t2,t2,t1
+	lb	t1, 0(t2)
+
+    la t3, buffer
+	addu t3,t3,s1
+	sb 	t1, 0(t3)
+	addiu s1,s1,1
+
+	remu s2,s2,t7
+
+	divu t7,t7,10
+
+	b loopImpresion
+
+fin: jr t9
+
 termina_error:
 	li 	v0,-1 		# no estoy seguro si esto anda
 	b 	terminar
 
 terminar_ok:
 	li	v0,0
+
+mostrarError:
+	li v0, SYS_write   #write syscal
+    li a0, 2			#stderrr file descriptor
+    la a1, error
+    li a2, 10				#cantidad de bytes a ecribir. largo de cadena de texto
+    syscall
+    b termina_error
 
 terminar:
 	move	sp,$fp
@@ -209,11 +360,11 @@ terminar:
 	jr	ra
 
 	.end mips32_plot
-	
+
 .data
-	first_line:	.asciiz "P2\n%u\n%u\n%u\n"
-	error: .asciiz "io error.\n"
-
-
-
-
+.align 2
+digits: .ascii "0123456789"
+error: .asciiz "io error.\n"
+buffer: .space BUFFSIZE + 3
+header: .ascii "P2\n"
+endline: .ascii "\n"
