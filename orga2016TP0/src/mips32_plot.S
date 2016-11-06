@@ -28,10 +28,6 @@ mips32_plot:
 	#contador de bytes a escribir
 	move s1, zero
 
-	#guardo fd en el stack
-    lw	t0,44(a0)
-    sw	t0,68($fp)
-
 	#Cargo el header en el buffer
     la t0, header
     la t1, buffer
@@ -45,48 +41,57 @@ mips32_plot:
 
     addiu s1, s1, 3
 
-    #res = fprintf(fp, "P2\n%u\n%u\n%u\n",
-	#	(unsigned)parms->x_res,
-	#	(unsigned)parms->y_res,
-	#	(unsigned)parms->shades);
+ 	#   	/* Header PGM. */
+	# res = fprintf(fp, "P2\n%u\n%u\n%u\n",
+	# 	(unsigned)parms->x_res,
+	# 	(unsigned)parms->y_res,
+	# 	(unsigned)parms->shades);
+	# if (res < 0) {
+	# 	fprintf(stderr, "io error.\n");
+	# 	return -1;
+	# }
 
- 	#GUARDO x_res
+ 	#levanto params->x_res y lo appendeo al buffer
 	lw	t0, 88($fp)
 	lw s2, 32(t0) #x_res
-	la t9, xres_endline
-    b print_uinteger
+	la t9, append_y_res
+    b append_to_buffer
 
 
-xres_endline:
-	#GUARDO UN ENDLINE
+append_y_res:
+
+	#Appendeo una "\n" TODO: extraer en un metodo para no repetir
+	la t1, buffer
 	la t3, endline
 	lb t3, 0(t3)
 	addu t7,t1,s1
 	sb t3, 0(t7)
 	addiu s1, s1, 1
 
-	#GUARDO y_res
 	lw	t0, 88($fp)
-	lw s2, 36(t0) #x_res
-    la t9, yres_endline
-    b print_uinteger
+	lw s2, 36(t0) #y_res
+    la t9, append_shades
+    b append_to_buffer
 
-#otro endline
-yres_endline:
+append_shades:
+
+	#Appendeo una "\n"
+	la t1, buffer
 	la t3, endline
 	lb t3, 0(t3)
 	addu t7,t1,s1
 	sb t3, 0(t7)
 	addiu s1, s1, 1
 
-	#Guardo shades
 	lw	t0, 88($fp)
 	lw s2, 40(t0) #shades
-	la t9, lastHeaderEndLine
-	b print_uinteger
+	la t9, calculate_fractal
+	b append_to_buffer
 
-#ultimo endline header
-lastHeaderEndLine:
+calculate_fractal:
+
+	#Appendeo una "\n"
+	la t1, buffer
 	la t3, endline
 	lb t3, 0(t3)
 	addu t7,t1,s1
@@ -204,17 +209,18 @@ termina_segundo_for:
 
 termina_tercer_for:
 
+	#tengo que escribir el valor de C, pero tal vez el buffer esta lleno
 	li t0, BUFFSIZE
 	bge s1, t0, escribirEnArchivo1
 
-    la t0, buffer #cargamos addres de buffer a escribir
+    la t0, buffer #estas 2 lineas se pueden borrar me parece.
     addu t0, t0, s1
 
+   	#cargo en s2 el valor de C
    	lw t1, 52($fp)
-	move s2, t1 #s2 = c
+	move s2, t1
     la t9, escribirEndLine
-	b print_uinteger
-
+	b append_to_buffer
 
 
 escribirEnArchivo1:
@@ -298,13 +304,11 @@ break_tercer_for:
 	b 	segundo_for
 
 
-print_uinteger:
+append_to_buffer:
 	li t0, 10
-	li t7,10
+	li t7, 10
 
-	move t1,s2
 	li t6, 1
-
 
 calculoOrden:
 	divu t1,s2,t7
@@ -319,8 +323,8 @@ loopImpresion:
 	blt t7, t6, fin
 	divu t1, s2, t7
 	la t2, digits
-	addu t2,t2,t1
-	lb	t1, 0(t2)
+	addu t2,t2,t1 #offset del array digit
+	lb	t1, 0(t2) #digit as char
 
     la t3, buffer
 	addu t3,t3,s1
@@ -335,13 +339,6 @@ loopImpresion:
 
 fin: jr t9
 
-termina_error:
-	li 	v0,-1 		# no estoy seguro si esto anda
-	b 	terminar
-
-terminar_ok:
-	li	v0,0
-
 mostrarError:
 	li v0, SYS_write   #write syscal
     li a0, 2			#stderrr file descriptor
@@ -349,6 +346,13 @@ mostrarError:
     li a2, 10				#cantidad de bytes a ecribir. largo de cadena de texto
     syscall
     b termina_error
+
+termina_error:
+	li 	v0,-1 		# no estoy seguro si esto anda
+	b 	terminar
+
+terminar_ok:
+	li	v0,0
 
 terminar:
 	move	sp,$fp
@@ -363,8 +367,9 @@ terminar:
 
 .data
 .align 2
+terminator:   .asciiz ""
 digits: .ascii "0123456789"
-error: .asciiz "io error.\n"
 buffer: .space BUFFSIZE + 3
 header: .ascii "P2\n"
 endline: .ascii "\n"
+error: .asciiz "io error.\n"
