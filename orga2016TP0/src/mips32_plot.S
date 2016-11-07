@@ -16,12 +16,12 @@ mips32_plot:
 	sw	a0,88($fp)
 
 	#float cpr = parms->cp_re;
-	lw	t0,24(a0)
-	sw	t0,60($fp)
+	l.s	$f0,24(a0)
+	s.s	$f0,60($fp)
 
 	#float cpi = parms-> cp_im;
-	lw	t0,28(a0)
-	sw	t0,64($fp)
+	l.s	$f0,28(a0)
+	s.s	$f0,64($fp)
 
 	#contador de bytes a escribir
 	move s1, zero
@@ -97,75 +97,71 @@ pre_for:
 	sw 	zero,44($fp)		# x = 0
 	sw 	zero,52($fp)		# c = 0
 	lw	t0,88($fp)		# t0 = *parms_t
-	lw	t1,4(t0)		
-	sw 	t1,20($fp)		# ci = UL_im
-	lw	t2,0(t0)
-	sw 	t2,16($fp)		# cr = UL_re
+	l.s 	$f1,4(t0)		
+	s.s 	$f1,20($fp)		# ci = UL_im
+	l.s 	$f2,0(t0)
+	s.s 	$f2,16($fp)		# cr = UL_re
 	lw 	t3,40(t0)
 	sw 	t3,52($fp)		# c = shades
 
-
 primer_for:
-	lw	t0, 88($fp)
 	lw	t1,48($fp)		# t1 = y
 	lw	t2,36(t0)		# t2 = y_res
 	bge 	t1,t2,termina_primer_for
 
-
 segundo_for:
-	lw	t0, 88($fp)
 	lw	t3,44($fp)		# t3 = x
 	lw	t4,32(t0)		# t4 = x_res
 	bge 	t3,t4,termina_segundo_for
 
-	lw	t5,16($fp)		# t5 = cr
-	sw 	t5,24($fp)
-	lw	t6,20($fp)		# t6 = ci
-	sw 	t6,28($fp)
+	l.s 	$f5,16($fp)		# t5 = cr
+	s.s 	$f5,24($fp)
+	l.s 	$f6,20($fp)		# t6 = ci
+	s.s 	$f6,28($fp)
 
 	#for (c = 0; c < parms->shades; ++c) {
 tercer_for:
-	lw	t0, 88($fp)
 	lw	t7,52($fp)		# t7 = c
 	lw	t8,40(t0)		# t8 = shades
 	bge t7,t8,break_tercer_for
 
-	lw	t1,24($fp)		# t1 = zr
-	lw 	t2,28($fp)		# t2 = zi
-	lw	t3,60($fp)		# t3 = cpr
-	lw	t4,64($fp)		# t4 = cpi
+	l.s 	$f1,24($fp)		# t1 = zr
+	l.s 	$f2,28($fp)		# t2 = zi
+	l.s 	$f3,60($fp)		# t3 = cpr
+	l.s 	$f4,64($fp)		# t4 = cpi
 
-	mulo	t7,t1,t1
-	mulo	t8,t2,t2
-	addu 	t7,t7,t8
-	sw 	t7,40($fp)		
-	li 	t8,4
-	bgt	t7,t8,termina_tercer_for
-
+	mul.s 	$f7,$f1,$f1
+	mul.s	$f8,$f2,$f2
+	add.s 	$f7,$f7,$f8
+	s.s 	$f7,40($fp)		
+	li.s 	$f8,4.0
+	c.le.s 	$f8,$f7
+	bc1t 	termina_tercer_for
+	
 	#sr = zr * zr - zi * zi + cpr;
-	mulo	t7,t1,t1
-	mulo	t8,t2,t2
-	subu	t8,t7,t8
-	addu 	t5,t8,t3		# t5 = sr
-	sw 	t5,32($fp)
+	mul.s	$f7,$f1,$f1
+	mul.s	$f8,$f2,$f2
+	sub.s	$f8,$f7,$f8
+	add.s 	$f5,$f8,$f3		# t5 = sr
+	s.s 	$f5,32($fp)
 
 	#si = 2 * zr * zi + cpi;
-	mulo 	t7,t1,t2
-	li 	t8,1
-	sll 	t7,t7,t8
-	addu 	t6,t7,t4		# t6 = si
-	sw 	t6,36($fp)
+	mul.s 	$f7,$f1,$f2
+	li.s 	$f8,2.0
+	mul.s 	$f7,$f7,$f8
+	add.s 	$f6,$f7,$f4		# t6 = si
+	s.s 	$f6,36($fp)
 	
 	#zr = sr;
-	sw 	t5,24($fp)
+	s.s 	$f5,24($fp)
 
 	#zi = si;
-	sw 	t6,28($fp)
+	s.s 	$f6,28($fp)
 
 	#++c
-	lw	t7,52($fp)
-	addi t7,t7,1
-	sw 	t7,52($fp)
+	lw	$f7,52($fp)
+	addi $f7,$f7,1
+	sw 	$f7,52($fp)
 
 	b 	tercer_for
 
@@ -173,15 +169,15 @@ termina_primer_for:
 
 	b 	terminar_ok
 
-#++y, ci -= parms->d_im
+	#++y, ci -= parms->d_im
 termina_segundo_for:
 	lw	t1,48($fp)		# t1 = y
 	addi 	t1,t1,1
 	sw 	t1,48($fp)
-	lw 	t2,20($fp)		# t2 = ci
-	lw	t3,20(t0)		# t3 = d_im
-	subu	t3,t2,t3
-	sw 	t3,20($fp)
+	l.s 	$f2,20($fp)		# t2 = ci
+	l.s 	$f3,20(t0)		# t3 = d_im
+	sub.s	$f3,$f2,$f3
+	s.s 	$f3,20($fp)
 	b 	primer_for
 
 termina_tercer_for:
@@ -269,15 +265,15 @@ escribirEnArchivo2:
     b escribirEndLine
 
 
-#++x, cr += parms->d_re
+	#++x, cr += parms->d_re
 break_tercer_for:
 	lw	t1,44($fp)		# t1 = x
 	addi	t1,t1,1
 	sw 	t1,44($fp)
-	lw	t2,16($fp)		# t2 = cr
-	lw	t3,16(t0)		# t3 = d_re
-	addu 	t3,t2,t3
-	sw 	t3,16($fp)
+	l.s 	$f2,16($fp)		# t2 = cr
+	l.s 	$f3,16(t0)		# t3 = d_re
+	add.s 	$f3,t2,t3
+	s.s 	$f3,16($fp)
 	b 	segundo_for
 
 
