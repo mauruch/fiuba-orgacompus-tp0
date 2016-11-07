@@ -87,7 +87,7 @@ calculate_fractal:
 	addiu s1, s1, 1
 
 	sw 	v0,56($fp)
-	bgez	v0, primer_for
+	bgez	v0, pre_for
 
 	#TODO escribir en stderr y terminar
 	b 	termina_error
