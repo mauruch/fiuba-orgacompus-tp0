@@ -93,6 +93,7 @@ calculate_fractal:
 	b 	termina_error
 
 pre_for:
+	lw	t0,88($fp)
 	sw 	zero,48($fp)		# y = 0
 	sw 	zero,44($fp)		# x = 0
 	sw 	zero,52($fp)		# c = 0
@@ -103,11 +104,13 @@ pre_for:
 	s.s 	$f4,16($fp)		# cr = UL_re
 
 primer_for:
+	lw	t0,88($fp)
 	lw	t1,48($fp)		# t1 = y
 	lw	t2,36(t0)		# t2 = y_res
 	bge 	t1,t2,termina_primer_for
 
 segundo_for:
+	lw	t0,88($fp)
 	lw	t3,44($fp)		# t3 = x
 	lw	t4,32(t0)		# t4 = x_res
 	bge 	t3,t4,termina_segundo_for
@@ -119,6 +122,7 @@ segundo_for:
 
 	#for (c = 0; c < parms->shades; ++c) {
 tercer_for:
+	lw	t0,88($fp)
 	lw	t7,52($fp)		# t7 = c
 	lw	t8,40(t0)		# t8 = shades
 	bge t7,t8,break_tercer_for
@@ -132,7 +136,7 @@ tercer_for:
 	mul.s 	$f10,$f2,$f2
 	mul.s	$f12,$f4,$f4
 	add.s 	$f10,$f10,$f12
-	s.s 	$f10,40($fp)		
+	s.s 	$f10,40($fp)		# absz = zr * zr + zi * zi	
 	li.s 	$f12,4.0
 	c.le.s 	$f12,$f10
 	bc1t 	termina_tercer_for
@@ -170,6 +174,7 @@ termina_primer_for:
 
 	#++y, ci -= parms->d_im
 termina_segundo_for:
+	lw	t0,88($fp)
 	lw	t1,48($fp)		# t1 = y
 	addi 	t1,t1,1
 	sw 	t1,48($fp)
@@ -266,6 +271,7 @@ escribirEnArchivo2:
 
 	#++x, cr += parms->d_re
 break_tercer_for:
+	lw	t0,88($fp)
 	lw	t1,44($fp)		# t1 = x
 	addi	t1,t1,1
 	sw 	t1,44($fp)
