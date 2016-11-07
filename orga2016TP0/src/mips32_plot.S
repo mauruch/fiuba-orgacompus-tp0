@@ -1,6 +1,4 @@
 #include <mips/regdef.h>
-#include <asm/unistd.h>
-#include <asm/asm.h>
 #include <sys/syscall.h>
 
 BUFFSIZE = 8192
@@ -40,16 +38,6 @@ mips32_plot:
     sb t2, 2(t1)
 
     addiu s1, s1, 3
-
- 	#   	/* Header PGM. */
-	# res = fprintf(fp, "P2\n%u\n%u\n%u\n",
-	# 	(unsigned)parms->x_res,
-	# 	(unsigned)parms->y_res,
-	# 	(unsigned)parms->shades);
-	# if (res < 0) {
-	# 	fprintf(stderr, "io error.\n");
-	# 	return -1;
-	# }
 
  	#levanto params->x_res y lo appendeo al buffer
 	lw	t0, 88($fp)
@@ -98,10 +86,6 @@ calculate_fractal:
 	sb t3, 0(t7)
 	addiu s1, s1, 1
 
-    #if (res < 0) {
-	#	fprintf(stderr, "io error.\n");
-	#	return -1;
-	#}
 	sw 	v0,56($fp)
 	bgez	v0, primer_for
 
@@ -120,18 +104,16 @@ pre_for:
 	lw 	t3,40(t0)
 	sw 	t3,52($fp)		# c = shades
 
-	#for (y = 0, ci = parms->UL_im;
-	#y < parms->y_res;
-	#++y, ci -= parms->d_im) {
+
 primer_for:
+	lw	t0, 88($fp)
 	lw	t1,48($fp)		# t1 = y
 	lw	t2,36(t0)		# t2 = y_res
 	bge 	t1,t2,termina_primer_for
 
-	#for (x = 0, cr = parms->UL_re;
-	#x < parms->x_res;
-	#++x, cr += parms->d_re) {
+
 segundo_for:
+	lw	t0, 88($fp)
 	lw	t3,44($fp)		# t3 = x
 	lw	t4,32(t0)		# t4 = x_res
 	bge 	t3,t4,termina_segundo_for
@@ -143,16 +125,16 @@ segundo_for:
 
 	#for (c = 0; c < parms->shades; ++c) {
 tercer_for:
+	lw	t0, 88($fp)
 	lw	t7,52($fp)		# t7 = c
 	lw	t8,40(t0)		# t8 = shades
-	bge 	t7,t8,break_tercer_for:
+	bge t7,t8,break_tercer_for
 
 	lw	t1,24($fp)		# t1 = zr
 	lw 	t2,28($fp)		# t2 = zi
 	lw	t3,60($fp)		# t3 = cpr
 	lw	t4,64($fp)		# t4 = cpi
 
-	#if ((absz = zr*zr + zi*zi) > 4.0f)
 	mulo	t7,t1,t1
 	mulo	t8,t2,t2
 	addu 	t7,t7,t8
@@ -182,24 +164,19 @@ tercer_for:
 
 	#++c
 	lw	t7,52($fp)
-	addui	t7,t7,1
+	addi t7,t7,1
 	sw 	t7,52($fp)
 
 	b 	tercer_for
 
 termina_primer_for:
-	#TODO
-	#if (fflush(fp) != 0) {
-	#fprintf(stderr, "cannot flush output file.\n");
-	#return -1;
-	#}
 
 	b 	terminar_ok
 
 #++y, ci -= parms->d_im
 termina_segundo_for:
 	lw	t1,48($fp)		# t1 = y
-	addui 	t1,t1,1
+	addi 	t1,t1,1
 	sw 	t1,48($fp)
 	lw 	t2,20($fp)		# t2 = ci
 	lw	t3,20(t0)		# t3 = d_im
@@ -295,7 +272,7 @@ escribirEnArchivo2:
 #++x, cr += parms->d_re
 break_tercer_for:
 	lw	t1,44($fp)		# t1 = x
-	addui	t1,t1,1
+	addi	t1,t1,1
 	sw 	t1,44($fp)
 	lw	t2,16($fp)		# t2 = cr
 	lw	t3,16(t0)		# t3 = d_re
