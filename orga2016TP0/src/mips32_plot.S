@@ -41,7 +41,7 @@ mips32_plot:
 
  	#levanto params->x_res y lo appendeo al buffer
 	lw	t0, 88($fp)
-	lw s2, 32(t0) #x_res
+	lw s2, 32(t0)		#x_res
 	la t9, append_y_res
     b append_to_buffer
 
@@ -57,7 +57,7 @@ append_y_res:
 	addiu s1, s1, 1
 
 	lw	t0, 88($fp)
-	lw s2, 36(t0) #y_res
+	lw s2, 36(t0)		#y_res
     la t9, append_shades
     b append_to_buffer
 
@@ -72,7 +72,7 @@ append_shades:
 	addiu s1, s1, 1
 
 	lw	t0, 88($fp)
-	lw s2, 40(t0) #shades
+	lw s2, 40(t0)		#shades
 	la t9, calculate_fractal
 	b append_to_buffer
 
@@ -159,9 +159,9 @@ tercer_for:
 	s.s 	$f6,28($fp)
 
 	#++c
-	lw	$f7,52($fp)
-	addi $f7,$f7,1
-	sw 	$f7,52($fp)
+	lw	t7,52($fp)
+	addi t7,t7,1
+	sw 	t7,52($fp)
 
 	b 	tercer_for
 
@@ -197,10 +197,10 @@ termina_tercer_for:
 
 
 escribirEnArchivo1:
-	li v0, SYS_write			#write syscal value
+	li v0, SYS_write		#write syscal value
 
 	lw	t0, 88($fp)
-	lw a0, 44(t0) #params->fd
+	lw a0, 44(t0)		#params->fd
 
     la a1, buffer
     move a2, s1
