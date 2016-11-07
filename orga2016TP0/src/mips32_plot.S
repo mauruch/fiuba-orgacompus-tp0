@@ -125,7 +125,7 @@ tercer_for:
 	lw	t0,88($fp)
 	lw	t7,52($fp)		# t7 = c
 	lw	t8,40(t0)		# t8 = shades
-	bge t7,t8,break_tercer_for
+	bge t7,t8,termina_tercer_for
 
 	l.s 	$f2,24($fp)		# $f2 = zr
 	l.s 	$f4,28($fp)		# $f4 = zi
@@ -169,11 +169,31 @@ tercer_for:
 	b 	tercer_for
 
 termina_primer_for:
+	sw 	zero,48($fp)		# y = 0
+	beqz s1, terminar_ok
+	li v0, SYS_write		#write syscal value
+
+	lw	t0, 88($fp)
+	lw a0, 44(t0)		#params->fd
+
+    la a1, buffer
+    move a2, s1
+
+    la t0, terminator
+    lb t0, 0(t0)
+    addu t1, a1, s1
+    sb t0, 0(t1)
+
+    syscall
+
+	blt v0, zero, mostrarError
+	li v0, 0
 
 	b 	terminar_ok
 
 	#++y, ci -= parms->d_im
 termina_segundo_for:
+	sw 	zero,44($fp)		# x = 0
 	lw	t0,88($fp)
 	lw	t1,48($fp)		# t1 = y
 	addi 	t1,t1,1
@@ -185,7 +205,7 @@ termina_segundo_for:
 	b 	primer_for
 
 termina_tercer_for:
-
+	
 	#tengo que escribir el valor de C, pero tal vez el buffer esta lleno
 	li t0, BUFFSIZE
 	bge s1, t0, escribirEnArchivo1
@@ -261,16 +281,16 @@ escribirEnArchivo2:
 
     la t0, terminator
     lb t0, 0(t0)
-    addu t1, t1, s3
+    addu t1, t1, s1
     sb t0, 0(t1)
 
-	move s3, zero
+	move s1, zero
 
     b escribirEndLine
 
-
 	#++x, cr += parms->d_re
 break_tercer_for:
+	sw 	zero,52($fp)		# c = 0
 	lw	t0,88($fp)
 	lw	t1,44($fp)		# t1 = x
 	addi	t1,t1,1
