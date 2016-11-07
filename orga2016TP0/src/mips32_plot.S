@@ -96,11 +96,11 @@ pre_for:
 	sw 	zero,48($fp)		# y = 0
 	sw 	zero,44($fp)		# x = 0
 	sw 	zero,52($fp)		# c = 0
-	lw	t0,88($fp)		# t0 = *parms_t
-	l.s 	$f1,4(t0)		
-	s.s 	$f1,20($fp)		# ci = UL_im
-	l.s 	$f2,0(t0)
-	s.s 	$f2,16($fp)		# cr = UL_re
+	lw	t0,88($fp)		# t0 = &parms_t
+	l.s 	$f2,4(t0)		
+	s.s 	$f2,20($fp)		# ci = UL_im
+	l.s 	$f4,0(t0)
+	s.s 	$f4,16($fp)		# cr = UL_re
 	lw 	t3,40(t0)
 	sw 	t3,52($fp)		# c = shades
 
@@ -114,10 +114,10 @@ segundo_for:
 	lw	t4,32(t0)		# t4 = x_res
 	bge 	t3,t4,termina_segundo_for
 
-	l.s 	$f5,16($fp)		# t5 = cr
-	s.s 	$f5,24($fp)
-	l.s 	$f6,20($fp)		# t6 = ci
-	s.s 	$f6,28($fp)
+	l.s 	$f6,16($fp)		# $f6 = cr
+	s.s 	$f6,24($fp)
+	l.s 	$f8,20($fp)		# $f8 = ci
+	s.s 	$f8,28($fp)
 
 	#for (c = 0; c < parms->shades; ++c) {
 tercer_for:
@@ -125,38 +125,38 @@ tercer_for:
 	lw	t8,40(t0)		# t8 = shades
 	bge t7,t8,break_tercer_for
 
-	l.s 	$f1,24($fp)		# t1 = zr
-	l.s 	$f2,28($fp)		# t2 = zi
-	l.s 	$f3,60($fp)		# t3 = cpr
-	l.s 	$f4,64($fp)		# t4 = cpi
+	l.s 	$f2,24($fp)		# $f2 = zr
+	l.s 	$f4,28($fp)		# $f4 = zi
+	l.s 	$f6,60($fp)		# $f6 = cpr
+	l.s 	$f8,64($fp)		# $f8 = cpi
 
-	mul.s 	$f7,$f1,$f1
-	mul.s	$f8,$f2,$f2
-	add.s 	$f7,$f7,$f8
-	s.s 	$f7,40($fp)		
-	li.s 	$f8,4.0
-	c.le.s 	$f8,$f7
+	mul.s 	$f10,$f2,$f2
+	mul.s	$f12,$f4,$f4
+	add.s 	$f10,$f10,$f12
+	s.s 	$f10,40($fp)		
+	li.s 	$f12,4.0
+	c.le.s 	$f12,$f10
 	bc1t 	termina_tercer_for
 	
 	#sr = zr * zr - zi * zi + cpr;
-	mul.s	$f7,$f1,$f1
-	mul.s	$f8,$f2,$f2
-	sub.s	$f8,$f7,$f8
-	add.s 	$f5,$f8,$f3		# t5 = sr
-	s.s 	$f5,32($fp)
+	mul.s	$f10,$f2,$f2
+	mul.s	$f12,$f4,$f4
+	sub.s	$f12,$f10,$f12
+	add.s 	$f12,$f12,$f6		# $f12 = sr
+	s.s 	$f12,32($fp)
 
 	#si = 2 * zr * zi + cpi;
-	mul.s 	$f7,$f1,$f2
-	li.s 	$f8,2.0
-	mul.s 	$f7,$f7,$f8
-	add.s 	$f6,$f7,$f4		# t6 = si
-	s.s 	$f6,36($fp)
+	mul.s 	$f10,$f2,$f4
+	li.s 	$f14,2.0
+	mul.s 	$f10,$f10,$f14
+	add.s 	$f10,$f10,$f8		# $f10 = si
+	s.s 	$f10,36($fp)
 	
 	#zr = sr;
-	s.s 	$f5,24($fp)
+	s.s 	$f12,24($fp)
 
 	#zi = si;
-	s.s 	$f6,28($fp)
+	s.s 	$f10,28($fp)
 
 	#++c
 	lw	t7,52($fp)
@@ -174,10 +174,10 @@ termina_segundo_for:
 	lw	t1,48($fp)		# t1 = y
 	addi 	t1,t1,1
 	sw 	t1,48($fp)
-	l.s 	$f2,20($fp)		# t2 = ci
-	l.s 	$f3,20(t0)		# t3 = d_im
-	sub.s	$f3,$f2,$f3
-	s.s 	$f3,20($fp)
+	l.s 	$f2,20($fp)		# $f2 = ci
+	l.s 	$f4,20(t0)		# $f4 = d_im
+	sub.s	$f4,$f2,$f4
+	s.s 	$f4,20($fp)
 	b 	primer_for
 
 termina_tercer_for:
@@ -235,10 +235,10 @@ escribirEndLine:
 	b break_tercer_for
 
 escribirEnArchivo2:
-	li v0, SYS_write			#write syscal value
+	li v0, SYS_write		#write syscal value
 
     lw	t0, 88($fp)
-	lw a0, 44(t0) #params->fd
+	lw a0, 44(t0)		#params->fd
 
     la a1, buffer
 
@@ -270,10 +270,10 @@ break_tercer_for:
 	lw	t1,44($fp)		# t1 = x
 	addi	t1,t1,1
 	sw 	t1,44($fp)
-	l.s 	$f2,16($fp)		# t2 = cr
-	l.s 	$f3,16(t0)		# t3 = d_re
-	add.s 	$f3,t2,t3
-	s.s 	$f3,16($fp)
+	l.s 	$f2,16($fp)		# $f2 = cr
+	l.s 	$f4,16(t0)		# $f4 = d_re
+	add.s 	$f4,$f2,t4
+	s.s 	$f4,16($fp)
 	b 	segundo_for
 
 
