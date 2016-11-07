@@ -101,8 +101,6 @@ pre_for:
 	s.s 	$f2,20($fp)		# ci = UL_im
 	l.s 	$f4,0(t0)
 	s.s 	$f4,16($fp)		# cr = UL_re
-	lw 	t3,40(t0)
-	sw 	t3,52($fp)		# c = shades
 
 primer_for:
 	lw	t1,48($fp)		# t1 = y
@@ -115,9 +113,9 @@ segundo_for:
 	bge 	t3,t4,termina_segundo_for
 
 	l.s 	$f6,16($fp)		# $f6 = cr
-	s.s 	$f6,24($fp)
+	s.s 	$f6,24($fp)		# zr = cr
 	l.s 	$f8,20($fp)		# $f8 = ci
-	s.s 	$f8,28($fp)
+	s.s 	$f8,28($fp)		# zi = ci
 
 	#for (c = 0; c < parms->shades; ++c) {
 tercer_for:
@@ -130,6 +128,7 @@ tercer_for:
 	l.s 	$f6,60($fp)		# $f6 = cpr
 	l.s 	$f8,64($fp)		# $f8 = cpi
 
+	# ( (absz = zr*zr + zi*zi) > 4.0f) ? break:continue
 	mul.s 	$f10,$f2,$f2
 	mul.s	$f12,$f4,$f4
 	add.s 	$f10,$f10,$f12
@@ -272,7 +271,7 @@ break_tercer_for:
 	sw 	t1,44($fp)
 	l.s 	$f2,16($fp)		# $f2 = cr
 	l.s 	$f4,16(t0)		# $f4 = d_re
-	add.s 	$f4,$f2,t4
+	add.s 	$f4,$f2,$f4
 	s.s 	$f4,16($fp)
 	b 	segundo_for
 
