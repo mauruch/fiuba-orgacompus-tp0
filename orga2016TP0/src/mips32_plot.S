@@ -170,6 +170,9 @@ tercer_for:
 
 termina_primer_for:
 	sw 	zero,48($fp)		# y = 0
+	lw	t0,88($fp)
+	l.s 	$f2,4(t0)		
+	s.s 	$f2,20($fp)		# ci = UL_im
 	beqz s1, terminar_ok
 	li v0, SYS_write		#write syscal value
 
@@ -195,6 +198,8 @@ termina_primer_for:
 termina_segundo_for:
 	sw 	zero,44($fp)		# x = 0
 	lw	t0,88($fp)
+	l.s 	$f4,0(t0)
+	s.s 	$f4,16($fp)		# cr = UL_re
 	lw	t1,48($fp)		# t1 = y
 	addi 	t1,t1,1
 	sw 	t1,48($fp)
