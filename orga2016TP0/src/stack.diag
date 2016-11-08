@@ -1,0 +1,42 @@
+88	Params
+-------------------------
+84	Padding
+80	ra
+76	$fp
+72	gp
+-------------------------
+68	File	*fp
+64	float cpi
+60	float cpr
+56	int res
+52	int c
+48	int y
+44	int x
+40	float absz
+36	float si
+32	float sr
+28	float zi
+24	float zr
+20	float ci
+16	float cr
+-------------------------
+12	a3
+8 	a2
+4 	a1
+0 	a0
+
+
+/*0*/	float UL_re;
+/*4*/	float UL_im;
+/*8*/	float LR_re;
+/*12*/	float LR_im;
+/*16*/	float d_re;
+/*20*/	float d_im;
+/*24*/	float cp_re;
+/*28*/	float cp_im;
+
+/*32*/	size_t x_res;
+/*36*/	size_t y_res;
+/*40*/	size_t shades;
+
+/*44*/	int fd;
