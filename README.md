@@ -14,5 +14,5 @@
 >scp -P2222 -r ./tp1.s root@127.0.0.1:/root
 
 ######Pasar el arch desde guest al host
-scp -P2222 root@127.0.0.1:/root/$tp_1 /home/$host_name
+>scp -P2222 root@127.0.0.1:/root/$tp_1 /home/$host_name
 
