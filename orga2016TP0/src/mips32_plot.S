@@ -98,51 +98,43 @@ mips32_plot:
 	addiu 	s1, s1, 3
 
 	#levanto params->x_res y le hago append al buffer.
+append_x_res:
 	lw		t0, 88($fp)
-	lw 		s2, 32(t0)
-	la 		t9, append_y_res
-	b 		append_to_buffer
+	lw 		s2, 32(t0) # x
+	la 		t9, append_to_buffer
+	jal		ra, t9
 
+	la 		t9, append_y_res
+	b 		append_new_line
 
 append_y_res:
-	#Appendeo una "\n" TODO: extraer en un metodo para no repetir.
+	lw		t0, 88($fp)
+	lw		s2, 36(t0) #y_res
+	la 		t9, append_to_buffer
+	jal		ra, t9
+
+	la 		t9, append_shades
+	b 		append_new_line
+
+append_shades:
+	lw		t0, 88($fp)
+	lw		s2, 40(t0)		#shades
+	la 		t9, append_to_buffer
+	jal		ra, t9
+
+	la 		t9, calculate_fractal
+	b 		append_new_line
+
+append_new_line:
 	la		t1, buffer
 	la		t3, endline
 	lb		t3, 0(t3)
 	addu	t2,t1,s1
 	sb		t3,0(t2)
 	addiu 	s1,s1,1
-
-	lw		t0,88($fp)
-	lw		s2,36(t0)		#y_res
-	la		t9,append_shades
-	b		append_to_buffer
-
-append_shades:
-
-	#Appendeo una "\n"
-	la		t1, buffer
-	la		t3, endline
-	lb		t3, 0(t3)
-	addu 	t2, t1,s1
-	sb		t3, 0(t2)
-	addiu 	s1, s1, 1
-
-	lw		t0, 88($fp)
-	lw		s2, 40(t0)		#shades
-	la		t9, calculate_fractal
-	b		append_to_buffer
+	jr t9
 
 calculate_fractal:
-
-	#Appendeo una "\n"
-	la		t1, buffer
-	la		t3, endline
-	lb		t3, 0(t3)
-	addu 	t2, t1,s1
-	sb 		t3, 0(t2)
-	addiu 	s1, s1, 1
-
 	sw 		v0, RES_OFF($fp)
 	bgez	v0, pre_for
 
@@ -268,9 +260,9 @@ end_third_for:
    	#cargo en s2 el valor de C
    	lw		t1,C_OFF($fp)
 	move 	s2,t1
-	la		t9,writeEndline
-	b		append_to_buffer
-
+	la 		t9, append_to_buffer
+	jal		ra, t9
+	b writeEndline
 
 writeToFile:
 	li		v0,SYS_write		#write syscal value
@@ -288,13 +280,9 @@ writeToFile:
 writeEndline:
 	li		t0,BUFFSIZE
 	bge 	s1,t0,writeToFileAndFallbackWriteEndline
-	la		t0,buffer
-	la		t4,endline
-	lb		t4,0(t4)
-	addu 	t0,t0,s1
-	sb		t4,0(t0)
-	addiu 	s1,s1,1
-	b		increment_second_for
+
+	la 		t9, increment_second_for
+	b 		append_new_line
 
 writeToFileAndFallbackWriteEndline:
 	li		v0,SYS_write		#write syscal value
@@ -323,40 +311,6 @@ increment_second_for:
 	s.s 	$f4,CR_OFF($fp)
 	b 		second_for
 
-append_to_buffer:
-	li 		t0,10
-	li 		t7,10
-	li 		t6,1
-
-getOrder:
-	divu 	t1,s2,t7
-	blt 	t1,t6,endGetOrder
-	mul 	t7,t7,10
-	b 		getOrder
-
-endGetOrder:
-	divu 	t7,t7,10
-
-digitToChar:
-	blt 	t7,t6,end
-	divu 	t1,s2,t7
-	la 		t2,digits
-	addu 	t2,t2,t1		#offset del array digit
-	lb		t1,0(t2)		#digit as char
-
-    la		t3,buffer
-	addu 	t3,t3,s1
-	sb		t1,0(t3)
-	addiu 	s1,s1,1
-
-	remu 	s2,s2,t7
-	divu 	t7,t7,10
-
-	b 		digitToChar
-
-end: 
-	jr t9
-
 showError:
 	li		v0,SYS_write
     		li	a0,2
@@ -383,7 +337,65 @@ finish:
 
 	.end 	mips32_plot
 
+
+# Function append_to_buffer
+
+.ent append_to_buffer
+append_to_buffer:
+
+	.set noreorder
+	.cpload t9
+	.set reorder
+
+	subu 	sp, sp, 8
+	sw		gp, 0(sp)
+	sw		$fp, 4(sp)
+
+#Bloque de código para convertir un entero a char.
+#Dado un entero, por ej 640, va diviendo por 10 para reducir a orden 1 (0 a 9) y asi utilizarlo como
+#offset del arreglo digits
+
+	li 		t0, 10
+	li 		t7, 10
+	li 		t6, 1
+
+getOrder:
+	divu 	t1, s2, t7
+	blt 	t1, t6, endGetOrder
+	mul 	t7, t7, 10
+	b 		getOrder
+
+endGetOrder:
+	divu 	t7,t7,10
+
+digitToChar:
+	blt 	t7, t6, end
+	divu 	t1, s2, t7
+	la 		t2, digits
+	addu 	t2, t2, t1		#offset del array digit
+	lb		t1, 0(t2)		#digit as char
+
+    la		t3, buffer
+	addu 	t3, t3, s1
+	sb		t1, 0(t3)
+	addiu 	s1, s1, 1
+
+	remu 	s2, s2, t7
+	divu 	t7, t7, 10
+
+	b 		digitToChar
+
+end:
+	move v0, s1
+	lw		gp, 0(sp)
+	lw		$fp, 4(sp)
+	addu sp, sp, 8
+	jr ra
+
+.end 	append_to_buffer
+
 .data
+
 digits: .ascii "0123456789"
 buffer: .space BUFFSIZE
 header: .ascii "P2\n"
